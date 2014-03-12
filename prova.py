@@ -101,6 +101,7 @@ def main() :
         if sport == 53 :
             src = socket.inet_ntoa(src)
             dst = socket.inet_ntoa(dst)
+            # trasforma da binario a "umano" l'indirizzo ip (quadrupla di interi)
             #print "%s -> %s" % (src, dst)
             # UDP/53 is a DNS response
             dns = dpkt.dns.DNS(data)
