@@ -75,14 +75,15 @@ def main() :
     # This code allows this program to run equally well on my laptop and my desktop. I did it this
     # way to demonstrate different interface names. If I was really clever, I'd figure out how to do this
     # under MS-Windows
-    if sys.argv[1] == "-i" :
-        pc = pcap.pcap( sys.argv[2] )
-    elif sys.argv[1] == "-f" :
-        pc = dpkt.pcap.Reader( open ( sys.argv[2] ) )
-    else :
-        print """Use -i INTERFACE to [packet capture from an interface.
-Use -f FILENAME to read a packet capture file"""
-        sys.exit(2)
+    #if sys.argv[1] == "-i" :
+    #    pc = pcap.pcap( sys.argv[2] )
+    #elif sys.argv[1] == "-f" :
+    #    pc = dpkt.pcap.Reader( open ( sys.argv[2] ) )
+    #else :
+    pc = dpkt.pcap.Reader( open ( "test2.pcap" ) )
+    #print """Use -i INTERFACE to [packet capture from an interface.
+        #Use -f FILENAME to read a packet capture file"""
+        #sys.exit(2)
     initialize_tables()
 
     for (src, sport, dst, dport, data ) in udp_iterator(pc) :
