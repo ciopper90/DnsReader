@@ -1,14 +1,8 @@
-#! /usr/bin/python
-#
-# This program decodes DNS packets from the wire or from a capture file
-# -*- coding: utf-8 -*-
-
 import dpkt, dpkt.dns
 import sys
 import socket
 import pcap
 import subprocess
-import dns_core
 
 type_table={} # This is a lookup table for DNS query types
 
@@ -26,6 +20,53 @@ def initialize_tables() :
                  15:"MX", # Mail exchange, RFC 1035
                  28:"AAAA", # IP v6 address, RFC 3596
                  }
+
+
+def processa(src,dst,sport,dport,data):
+    # Uncomment if you want to see all UDP packets
+    # print "from ", socket.inet_ntoa(src),":",sport, " to ", socket.inet_ntoa(dst),":",dport
+    #if dport == 53 :
+    #    # UDP/53 is a DNS query
+    #    dns = dpkt.dns.DNS(data)
+    #    if dns.opcode != dpkt.dns.DNS_QUERY :
+    #        print "A DNS packet was sent to the nameserver, but the opcode was %d instead of DNS_QUERY (this is a software error)" % dns.opcode
+    #    if dns.qr != dpkt.dns.DNS_Q :
+    #        print "A DNS packet was sent to the name server, but dns.qr is not 0 and should be. It is %d" % dns.qr
+    #    print "query for ", dns.qd[0].name, "ID is ", dns.id, "dns.qr is ", dns.qr, "query type is ", dns.qd[0].type, type_table[dns.qd[0].type]
+    #    print "dns.qd is ", dns.qd
+    if sport == 53 :
+        src = socket.inet_ntoa(src)
+        dst = socket.inet_ntoa(dst)
+        # trasforma da binario a "umano" l'indirizzo ip (quadrupla di interi)
+        #print "%s -> %s" % (src, dst)
+        # UDP/53 is a DNS response
+        dns = dpkt.dns.DNS(data)
+        if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR :
+            return
+        ##arriva qui e torna al for, non fai piu nulla qui
+        print "responding to ", dns.id, "dns.qr is ", dns.qr , " inviata da '", dst , "' inviata al DNS '", src,"'"
+        if dns.qr != dpkt.dns.DNS_R :
+            print ""#"A DNS packet was received from a name server, but dns.qr is not 1 and should be. It is %d" % dns.qr
+        if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR :
+            print ""#"Response has no error"
+        elif dns.get_rcode() == dpkt.dns.DNS_RCODE_NXDOMAIN :
+            print "There is no name in this domain"
+        else :
+            print ""#"Response is something other than NOERR or NXDOMAIN %d - this software is incomplete" % dns.get_rcode()
+        print ""#"The response packet has %d RRs" % len(dns.an)
+        # Decode the RR records in the NS section
+        for rr in dns.ns :
+            decode_dns_response ( rr, "NS")
+        # Decode the answers in the DNS answer
+        for rr in dns.an :
+            decode_dns_response ( rr, "AN" )
+        # Decode the additional responses
+        for rr in dns.ar :
+            decode_dns_response ( rr, "AR" )
+        print "dns.qd is ", dns.qd
+    return
+
+
 
 def hexify(x):
     "The strings from DNS resolver contain non-ASCII characters - I don't know why. This function investigates that"
@@ -70,26 +111,3 @@ def decode_dns_response ( rr, response_type ) :
             print ""#"r-data is ", r_data," in hex: ", hexify(r_data)
         else :
             print ""#"Unknown"
-
-
-def main() :
-    # This code allows this program to run equally well on my laptop and my desktop. I did it this
-    # way to demonstrate different interface names. If I was really clever, I'd figure out how to do this
-    # under MS-Windows
-    #if sys.argv[1] == "-i" :
-    #    pc = pcap.pcap( sys.argv[2] )
-    #elif sys.argv[1] == "-f" :
-    #    pc = dpkt.pcap.Reader( open ( sys.argv[2] ) )
-    #else :
-    pc = dpkt.pcap.Reader( open ( "test2.pcap" ) )
-    #print """Use -i INTERFACE to [packet capture from an interface.
-        #Use -f FILENAME to read a packet capture file"""
-        #sys.exit(2)
-    initialize_tables()
-
-    for (src, sport, dst, dport, data ) in udp_iterator(pc) :
-        dns_core.processa(src,dst,sport,dport,data)
-
-
-if __name__ == "__main__" :
-    main()
