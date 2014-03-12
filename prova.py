@@ -101,13 +101,13 @@ def main() :
         if sport == 53 :
             src = socket.inet_ntoa(src)
             dst = socket.inet_ntoa(dst)
-            print "%s -> %s" % (src, dst)
+            #print "%s -> %s" % (src, dst)
             # UDP/53 is a DNS response
             dns = dpkt.dns.DNS(data)
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR :
                 continue
                 ##arriva qui e torna al for, non fai piu nulla qui
-            print "responding to ", dns.id, "dns.qr is ", dns.qr , " inviata da ", hexify(dst) ## qui ho il dest che faccio hexify
+            print "responding to ", dns.id, "dns.qr is ", dns.qr , " inviata da ", dst ## qui ho il dest che faccio hexify
             if dns.qr != dpkt.dns.DNS_R :
                 print ""#"A DNS packet was received from a name server, but dns.qr is not 1 and should be. It is %d" % dns.qr
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR :
