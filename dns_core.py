@@ -44,40 +44,43 @@ def processa(src, dst, sport, dport, data,vett_siti_err,vett_siti_ok):
         # trasforma da binario a "umano" l'indirizzo ip (quadrupla di interi)
         #print "%s -> %s" % (src, dst)
         # UDP/53 is a DNS response
-        dns = dpkt.dns.DNS(data)
-        if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR:
-            sito_ok=dns.qd[0].name
-            vett_siti_ok.append(sito_ok)
-            return vett_siti_err,vett_siti_ok
-        ##arriva qui e torna al for, non fai piu nulla qui
-        print "responding to ", dns.id, "dns.qr is ", dns.qr, " inviata da '", dst, "' inviata al DNS '", src, "'"
-        #if dns.qr != dpkt.dns.DNS_R:
-        #    print ""#"A DNS packet was received from a name server, but dns.qr is not 1 and should be. It is %d" % dns.qr
-        #if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR:
+        try:
+            dns = dpkt.dns.DNS(data)
+            if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR:
+                sito_ok=dns.qd[0].name
+                vett_siti_ok.append(sito_ok)
+                return vett_siti_err,vett_siti_ok
+            ##arriva qui e torna al for, non fai piu nulla qui
+            print "responding to ", dns.id, "dns.qr is ", dns.qr, " inviata da '", dst, "' inviata al DNS '", src, "'"
+            #if dns.qr != dpkt.dns.DNS_R:
+            #    print ""#"A DNS packet was received from a name server, but dns.qr is not 1 and should be. It is %d" % dns.qr
+            #if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR:
             #print ""#"Response has no error"
-        if dns.get_rcode() == dpkt.dns.DNS_RCODE_NXDOMAIN:
-            print "There is no name in this domain"
-        #else:
-        #    print ""  #"Response is something other than NOERR or NXDOMAIN %d - this software is incomplete" % dns.get_rcode()
-        #print ""  #"The response packet has %d RRs" % len(dns.an)
-        # Decode the RR records in the NS section
-        for rr in dns.ns:
-            decode_dns_response(rr, "NS")
-        # Decode the answers in the DNS answer
-        for rr in dns.an:
-            decode_dns_response(rr, "AN")
-        # Decode the additional responses
-        for rr in dns.ar:
-            decode_dns_response(rr, "AR")
-        ##stampa l'url ricercat
-        ##qui bisogna controllare se risulta essere un url valida oppure no
-        sito=dns.qd[0].name
-        print "dns.qd is ", sito
-
-    #    print "vettore siti e' ", vettore_siti
-        if sito not in list(vett_siti_err):
-            vett_siti_err.append(sito)
-        print ""
+            if dns.get_rcode() == dpkt.dns.DNS_RCODE_NXDOMAIN:
+                print "There is no name in this domain"
+            #else:
+            #    print ""  #"Response is something other than NOERR or NXDOMAIN %d - this software is incomplete" % dns.get_rcode()
+            #print ""  #"The response packet has %d RRs" % len(dns.an)
+            # Decode the RR records in the NS section
+            for rr in dns.ns:
+                decode_dns_response(rr, "NS")
+            # Decode the answers in the DNS answer
+            for rr in dns.an:
+                decode_dns_response(rr, "AN")
+            # Decode the additional responses
+            for rr in dns.ar:
+                decode_dns_response(rr, "AR")
+            ##stampa l'url ricercat
+            ##qui bisogna controllare se risulta essere un url valida oppure no
+            sito=dns.qd[0].name
+            print "dns.qd is ", sito
+            #    print "vettore siti e' ", vettore_siti
+            if sito not in list(vett_siti_err):
+                vett_siti_err.append(sito)
+            print ""
+        except Exception:
+            print "Errore Data"
+            pass
     return vett_siti_err,vett_siti_ok
 
 
