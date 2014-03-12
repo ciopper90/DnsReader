@@ -87,8 +87,28 @@ def main() :
         #sys.exit(2)
     initialize_tables()
 
+    vettore_siti_errore=[]
+    vettore_siti_ok=[]
     for (src, sport, dst, dport, data ) in udp_iterator(pc) :
-        dns_core.processa(src,dst,sport,dport,data)
+        vettore_siti_errore,vettore_siti_ok=dns_core.processa(src,dst,sport,dport,data,vettore_siti_errore,vettore_siti_ok)
+       # print "stampo ", vettore_siti
+        #vettore_siti=list(vettore_siti_b)
+
+    ## in questa lista ho tutte le richieste che mi hanno provocato un fault
+    print "Tutte le richieste di siti rilevate che NON ESISTONO sono elencate in questa lista: "
+    i=1
+
+    for sito in vettore_siti_errore:
+        print i," : ",sito
+        i=i+1
+
+    print "Tutte le richieste di siti rilevate che ESISTONO sono elencate in questa lista: "
+    i=1
+
+
+    for sito in vettore_siti_ok:
+        print i," : ",sito
+        i=i+1
 
 
 if __name__ == "__main__" :

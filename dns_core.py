@@ -23,7 +23,7 @@ def initialize_tables():
     }
 
 
-def processa(src, dst, sport, dport, data):
+def processa(src, dst, sport, dport, data,vett_siti_err,vett_siti_ok):
     # Uncomment if you want to see all UDP packets
     # print "from ", socket.inet_ntoa(src),":",sport, " to ", socket.inet_ntoa(dst),":",dport
     #if dport == 53 :
@@ -35,6 +35,7 @@ def processa(src, dst, sport, dport, data):
     #        print "A DNS packet was sent to the name server, but dns.qr is not 0 and should be. It is %d" % dns.qr
     #    print "query for ", dns.qd[0].name, "ID is ", dns.id, "dns.qr is ", dns.qr, "query type is ", dns.qd[0].type, type_table[dns.qd[0].type]
     #    print "dns.qd is ", dns.qd
+   # print "ricevo vettore siti : ", vettore_siti
     if sport == 53:
         src = socket.inet_ntoa(src)
         dst = socket.inet_ntoa(dst)
@@ -43,7 +44,9 @@ def processa(src, dst, sport, dport, data):
         # UDP/53 is a DNS response
         dns = dpkt.dns.DNS(data)
         if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR:
-            return
+            sito_ok=dns.qd[0].name
+            vett_siti_ok.append(sito_ok)
+            return vett_siti_err,vett_siti_ok
         ##arriva qui e torna al for, non fai piu nulla qui
         print "responding to ", dns.id, "dns.qr is ", dns.qr, " inviata da '", dst, "' inviata al DNS '", src, "'"
         #if dns.qr != dpkt.dns.DNS_R:
@@ -65,10 +68,15 @@ def processa(src, dst, sport, dport, data):
         for rr in dns.ar:
             decode_dns_response(rr, "AR")
         ##stampa l'url ricercat
-        ##qui bisogna controllare se risulta essere un urla valida oppure no
-        print "dns.qd is ", dns.qd[0].name
+        ##qui bisogna controllare se risulta essere un url valida oppure no
+        sito=dns.qd[0].name
+        print "dns.qd is ", sito
+
+    #    print "vettore siti e' ", vettore_siti
+        if sito not in list(vett_siti_err):
+            vett_siti_err.append(sito)
         print ""
-    return
+    return vett_siti_err,vett_siti_ok
 
 
 def hexify(x):
