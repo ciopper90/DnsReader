@@ -103,7 +103,7 @@ def main() :
             dns = dpkt.dns.DNS(data)
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR :
                 continue
-                ##arriva qui e torna al for, non fai più nulla qui
+                ##arriva qui e torna al for, non fai piu nulla qui
             print "responding to ", dns.id, "dns.qr is ", dns.qr
             if dns.qr != dpkt.dns.DNS_R :
                 print "A DNS packet was received from a name server, but dns.qr is not 1 and should be. It is %d" % dns.qr
