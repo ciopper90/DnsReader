@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import dpkt, dpkt.dns
 import sys
 import socket
