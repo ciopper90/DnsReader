@@ -99,6 +99,9 @@ def main() :
         #    print "query for ", dns.qd[0].name, "ID is ", dns.id, "dns.qr is ", dns.qr, "query type is ", dns.qd[0].type, type_table[dns.qd[0].type]
         #    print "dns.qd is ", dns.qd
         if sport == 53 :
+            src = socket.inet_ntoa(src)
+            dst = socket.inet_ntoa(dst)
+            print "%s -> %s" % (src, dst)
             # UDP/53 is a DNS response
             dns = dpkt.dns.DNS(data)
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR :
@@ -117,10 +120,10 @@ def main() :
 # Decode the RR records in the NS section
             for rr in dns.ns :
                 decode_dns_response ( rr, "NS")
-# Decode the answers in the DNS answer
+            # Decode the answers in the DNS answer
             for rr in dns.an :
                 decode_dns_response ( rr, "AN" )
-# Decode the additional responses
+            # Decode the additional responses
             for rr in dns.ar :
                 decode_dns_response ( rr, "AR" )
             print "dns.qd is ", dns.qd
