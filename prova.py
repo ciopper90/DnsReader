@@ -50,25 +50,25 @@ def decode_dns_response ( rr, response_type ) :
     r_type = rr.type
     r_data = rr.rdata
     if rr.cls != 1 :
-        print "Response is not class IN, might be Hesiod, chaos, or qclass (all of which are anachronisms)"
-    print "Response is component", response_type
+        print ""#"Response is not class IN, might be Hesiod, chaos, or qclass (all of which are anachronisms)"
+    print ""#"Response is component", response_type
     if r_type == dpkt.dns.DNS_CNAME :
-        print "Response is a CNAME ", r_data," in hex: ", hexify(r_data)
+        print ""#"Response is a CNAME ", r_data," in hex: ", hexify(r_data)
     elif r_type == dpkt.dns.DNS_A :
-        print "response is an IPv4 address", socket.inet_ntoa( r_data )
+        print ""#"response is an IPv4 address", socket.inet_ntoa( r_data )
     elif r_type == dpkt.dns.DNS_NS :
-        print "Response is a NS name", r_data," in hex: ", hexify(r_data)
+        print ""#"Response is a NS name", r_data," in hex: ", hexify(r_data)
     elif r_type == dpkt.dns.DNS_AAAA :
-        print "response is an IPv6 address", socket.inet_ntop( socket.AF_INET6, r_data )
+        print ""#"response is an IPv6 address", socket.inet_ntop( socket.AF_INET6, r_data )
     elif r_type == dpkt.dns.DNS_PTR :
-        print "response is a hostname from an IP address", r_data, "in hex: ", hexify(r_data)
+        print ""#"response is a hostname from an IP address", r_data, "in hex: ", hexify(r_data)
     else :
-        print "Response type is something other than a CNAME, PTR, IPv4 address, or IPv6 address", r_type,
+        print ""#"Response type is something other than a CNAME, PTR, IPv4 address, or IPv6 address", r_type,
         if r_type in type_table :
-            print type_table[r_type]
-            print "r-data is ", r_data," in hex: ", hexify(r_data)
+            print ""#type_table[r_type]
+            print ""#"r-data is ", r_data," in hex: ", hexify(r_data)
         else :
-            print "Unknown"
+            print ""#"Unknown"
 
 
 def main() :
@@ -104,16 +104,16 @@ def main() :
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR :
                 continue
                 ##arriva qui e torna al for, non fai piu nulla qui
-            print "responding to ", dns.id, "dns.qr is ", dns.qr
+            print "responding to ", dns.id, "dns.qr is ", dns.qr , " inviata da ", hexify(dst) ## qui ho il dest che faccio hexify
             if dns.qr != dpkt.dns.DNS_R :
-                print "A DNS packet was received from a name server, but dns.qr is not 1 and should be. It is %d" % dns.qr
+                print ""#"A DNS packet was received from a name server, but dns.qr is not 1 and should be. It is %d" % dns.qr
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR :
-                print "Response has no error"
+                print ""#"Response has no error"
             elif dns.get_rcode() == dpkt.dns.DNS_RCODE_NXDOMAIN :
                 print "There is no name in this domain"
             else :
-                print "Response is something other than NOERR or NXDOMAIN %d - this software is incomplete" % dns.get_rcode()
-            print "The response packet has %d RRs" % len(dns.an)
+                print ""#"Response is something other than NOERR or NXDOMAIN %d - this software is incomplete" % dns.get_rcode()
+            print ""#"The response packet has %d RRs" % len(dns.an)
 # Decode the RR records in the NS section
             for rr in dns.ns :
                 decode_dns_response ( rr, "NS")
