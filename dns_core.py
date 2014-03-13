@@ -8,8 +8,13 @@ import subprocess
 
 type_table = {}  # This is a lookup table for DNS query types
 
-dns_whitelist = ['192.168.1.1' , '8.8.8.8']
+dns_whitelist = []
 
+
+def loadDns():
+    #funzione per il caricamento dinamico dei dns(va poi implementato)
+    global dns_whitelist
+    dns_whitelist = ['192.168.1.1' , '8.8.8.8']
 
 def initialize_tables():
     global type_table
@@ -29,6 +34,8 @@ def initialize_tables():
 
 
 def processa(src, dst, sport, dport, data,vett_siti_err,vett_siti_ok):
+    if len(dns_whitelist) == 0:
+        loadDns()
     # Uncomment if you want to see all UDP packets
     # print "from ", socket.inet_ntoa(src),":",sport, " to ", socket.inet_ntoa(dst),":",dport
     #if dport == 53 :
