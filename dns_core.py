@@ -19,9 +19,9 @@ def loadDns():
     #dns_whitelist = ['192.168.1.1' , '8.8.8.8']
     with open('dns_permessi.csv', 'rb') as csvfile:
         dns_whitelist = list(csv.reader(csvfile, delimiter=',', quotechar='|'))[0]
-        print " è stato letto: ",dns_whitelist," poiiiiiiiiiiiiiiiiiii"
-        for row in dns_whitelist:
-            print row
+        #print " è stato letto: ",dns_whitelist," poiiiiiiiiiiiiiiiiiii"
+        #for row in dns_whitelist:
+        #    print row
 
 def initialize_tables():
     global type_table
