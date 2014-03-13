@@ -48,6 +48,7 @@ def main() :
     #elif sys.argv[1] == "-f" :
     #    pc = dpkt.pcap.Reader( open ( sys.argv[2] ) )
     #else :
+    print "inizio"
     pc = pcap.pcap()
     #print """Use -i INTERFACE to [packet capture from an interface.
         #Use -f FILENAME to read a packet capture file"""
@@ -56,8 +57,10 @@ def main() :
 
     pc.setfilter('port 53')
     print 'listening on %s: %s' % (pc.name, pc.filter)
+    vettore_siti_errore=[]
+    vettore_siti_ok=[]
     for (src, sport, dst, dport, data ) in udp_iterator(pc) :
-        dns_core.processa(src,dst,sport,dport,data)
+        dns_core.processa(src,dst,sport,dport,data,vettore_siti_errore,vettore_siti_ok)
 
 
 if __name__ == "__main__" :
