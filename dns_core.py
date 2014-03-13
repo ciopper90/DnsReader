@@ -5,6 +5,8 @@ import sys
 import socket
 import pcap
 import subprocess
+import csv
+
 
 type_table = {}  # This is a lookup table for DNS query types
 
@@ -14,7 +16,12 @@ dns_whitelist = []
 def loadDns():
     #funzione per il caricamento dinamico dei dns(va poi implementato)
     global dns_whitelist
-    dns_whitelist = ['192.168.1.1' , '8.8.8.8']
+    #dns_whitelist = ['192.168.1.1' , '8.8.8.8']
+    with open('dns_permessi.csv', 'rb') as csvfile:
+        dns_whitelist = list(csv.reader(csvfile, delimiter=',', quotechar='|'))[0]
+        print " è stato letto: ",dns_whitelist," poiiiiiiiiiiiiiiiiiii"
+        for row in dns_whitelist:
+            print row
 
 def initialize_tables():
     global type_table
@@ -88,5 +95,5 @@ def controlla_dns(src, dst, sport, dport, data):
         if i == src:
             ok=1
     if ok == 0:
-        print "dns non autorizzato " , src , " contattato da ", dst
+        print "dns non autorizzato " , src , " contattato da ", dst, " non presente in ", dns_whitelist
     return
