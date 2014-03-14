@@ -6,34 +6,49 @@ import socket
 import pcap
 import subprocess
 import csv
+import re
 
 
 type_table = {}  # This is a lookup table for DNS query types
-
 dns_whitelist = []
+output_R_ok=""
+output_R_no=""
+output_Q=""
+
+#inizio inizializzazioni
+def open_file():
+    global output_R_ok
+    output_R_ok = open("output_R_ok","w")
+    global output_R_no
+    output_R_no = open("output_R_no","w")
+    global output_Q
+    output_Q = open("output_Q","w")
+    if output_R_ok!=None and output_R_no!=None and output_Q!=None:
+        return True
+    else:
+        return False
+
+def close_file():
+    global output_R_ok
+    output_R_ok.close()
+    global output_R_no
+    output_R_no.close()
+    global output_Q
+    output_Q.close()
 
 def scrivi(str,file):
-    #print "voglio scrivere ",str," su file ",file
     str=str[:]+"\n"
     file.write(str)
 
-
 def loadDns():
-    #funzione per il caricamento dinamico dei dns(va poi implementato)
     global dns_whitelist
     with open('dns_permessi.csv', 'rb') as csvfile:
         reader=csv.reader(csvfile, delimiter=',', quotechar='|')
-        reader=list(reader)[0]
         for i in reader:
-            dns_whitelist.append(i)
-
-    #print dns_whitelist , "questa è la whitelisttttttttttttttttttttttttttttttttttttttttttttttttttt"
+            dns_whitelist.append(i[0])
 
 def initialize_tables():
     global type_table
-
-
-    # From http://www.networksorcery.com/enp/protocol/dns.htm
     type_table = {1: "A",  # IP v4 address, RFC 1035
                   2: "NS",  # Authoritative name server, RFC 1035
                   5: "CNAME",  # Canonical name for an alias, RFC 1035
@@ -44,9 +59,32 @@ def initialize_tables():
                   28: "AAAA",  # IP v6 address, RFC 3596
     }
 
+#fine inizializzazioni
+
+def udp_iterator(pc):
+    """pc is a pcap.pcap object that listens to the network and returns a packet object when it hears a packet go by"""
+    for ts, pkt in pc:
+        # parse the packet. Decode the ethertype. If it is IP (IPv4) then process it further
+        eth = dpkt.ethernet.Ethernet(pkt)
+        if eth.type == dpkt.ethernet.ETH_TYPE_IP :
+            ip = eth.data
+            # If the IP protocol is UDP, then process it further
+            if ip.p == dpkt.ip.IP_PROTO_UDP :
+                udp = ip.data
+                # Pass the IP addresses, source port, destination port, and data back to the caller.
+                yield ( ip.src, udp.sport, ip.dst, udp.dport, udp.data)
+            elif ip.p ==dpkt.ip.IP_PROTO_TCP:
+                print "tcp"
 
 
-def processa(src, dst, sport, dport, data,vett_siti_err,vett_siti_ok,output_da_risposta_nxdomain,output_da_richiesta_dns_nowl):
+
+def reader(pc):
+    open_file()
+    for (src, sport, dst, dport, data ) in udp_iterator(pc) :
+        processa(src,dst,sport,dport,data)
+    close_file()
+
+def processa(src, dst, sport, dport, data):
     if len(dns_whitelist) == 0:
         loadDns()
 
@@ -57,64 +95,35 @@ def processa(src, dst, sport, dport, data,vett_siti_err,vett_siti_ok,output_da_r
         if dns.qr == dpkt.dns.DNS_Q:#dport == 53 :
             # UDP/53 is a DNS query
             if nameserver not in dns_whitelist:
-                line="timestamp, "+str(client) +", "+str(nameserver)+", domain"
-               # print line,"URCAAAAAAAAAAAAAAAAAAAAAAAAAAA",nameserver," non è in ",dns_whitelist
-                scrivi(line,output_da_richiesta_dns_nowl)
+                line="timestamp, "+str(client) +", "+str(nameserver)+", "+dns.qd[0].name
+                scrivi(line,output_Q)
 
         if dns.qr == dpkt.dns.DNS_R:#sport == 53:
             # UDP/53 is a DNS response
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR:
-                #questo e il caso in cui non ci siano errori
-                controlla_dns(nameserver, client, sport, dport, data)
-                #poi bisogna anche controllare se l'url non e malevolo(meglio chiedere al prof qui)
-
+                line="timestamp, "+str(client) +", "+str(nameserver)+", "+str(dns.qd[0].name)
                 sito= dns.qd[0].name
+                result = re.match("(.)*.?unimo(re)?.it$", sito,re.IGNORECASE)
 
-                if sito != " fa regex qui non permesse":
-
-
-######stampa per debug grossolano########
-######################################################################
-                    print "RISPOSTA a richiesta risoluzione esistente e permessa"
-                    sito_ok=sito
-                    if sito_ok not in vett_siti_ok:
-                        vett_siti_ok.append(sito_ok)
-####################################################################
-                else:
-                    print "RISPOSTA dove il sito richiesto esistente è noto come non sicuro"
-
-                return vett_siti_err,vett_siti_ok
-            ##arriva qui e torna al for, non fai piu nulla qui
-            #print "responding to ", dns.id, "dns.qr is ", dns.qr, " inviata da '", client, "' inviata al DNS '", nameserver, "'"
+                if result == None:
+                    scrivi(line,output_R_ok)
+                return
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NXDOMAIN:
-                line="timestamp, "+str(client) +", "+str(nameserver)+", "+str(dns.qr) +", "+str(dns.qd[0].name)
-                #print line
-
+                line="timestamp, "+str(client) +", "+str(nameserver)+", "+str(dns.qd[0].name)
                 sito= dns.qd[0].name
-                sito_ko=""
-                if sito == " fa regex qui che è unimore.it o unimo.it":
-                    print "RISPOSTA A RICHIESTA CON NXDOMAIN È ok"
+                result = re.match("(.)*.local$", sito,re.IGNORECASE)
 
-                else:
-                    print "RISPOSTA A richista CON nxdomain è a rischio "
-                    scrivi(line,output_da_risposta_nxdomain)
-                    sito_ko=sito
-
-######stampa per debug grossolano########
-###########################################################
-
-                if sito_ko not in vett_siti_err and sito_ko!="":
-                    vett_siti_err.append(sito_ko)
-###########################################################
+                if result == None:
+                    scrivi(line,output_R_no)
 
     except Exception:
         print "Errore Data"
 
-    return vett_siti_err,vett_siti_ok
+    return
 
 
 def controlla_dns(nameserver, client, sport, dport, data):
-    #controlla se il dns e valido oppure no
+    "controlla se il dns e valido oppure no"
     if nameserver not in dns_whitelist:
         #timestamp,dst,src,namedomain,address
         print client,", ",nameserver,", "
