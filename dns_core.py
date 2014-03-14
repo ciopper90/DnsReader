@@ -11,6 +11,7 @@ import re
 
 type_table = {}  # This is a lookup table for DNS query types
 dns_whitelist = []
+malevoli={}
 output_R_ok=""
 output_R_no=""
 output_Q=""
@@ -45,7 +46,25 @@ def loadDns():
     with open('dns_permessi.csv', 'rb') as csvfile:
         reader=csv.reader(csvfile, delimiter=',', quotechar='|')
         for i in reader:
-            dns_whitelist.append(i[0])
+             dns_whitelist.append(i[0])
+
+def loadSitiMalevoli():
+    global malevoli
+    malevoli={}
+    with open('name_malevoli.csv', 'rb') as csvfile:
+		reader=csv.reader(csvfile, delimiter=',', quotechar='|')
+		#reader=str(reader)[0]
+		for i in reader:
+
+			if 3<len(i):
+
+				i=i[3].replace("\"", "")
+				#print i
+				if not malevoli.has_key(i) and i != "-":
+					#print i
+					malevoli[i]=i
+
+
 
 def initialize_tables():
     global type_table
@@ -85,8 +104,9 @@ def reader(pc):
     close_file()
 
 def processa(src, dst, sport, dport, data):
-    if len(dns_whitelist) == 0:
+    if len(dns_whitelist) == 0 or len(malevoli)==0:
         loadDns()
+        loadSitiMalevoli()
 
     try:
         client = socket.inet_ntoa(src)
@@ -105,15 +125,24 @@ def processa(src, dst, sport, dport, data):
                 sito= dns.qd[0].name
                 result = re.match("(.)*.?unimo(re)?.it$", sito,re.IGNORECASE)
 
-                if result == None:
+                if result == None and not malevoli.has_key(sito) :
+                                ##è una ricerca precisa di chiave... quindi non è ottima me funziona
+                    print sito
+                    ##qui loggo i siti leciti che NON fanno parte di unimore
                     scrivi(line,output_R_ok)
+                else:
+                    if malevoli.has_key(sito) :
+                        ## se è un sito malevolo che è contenuto in quella lista
+                        print "Sito ",sito, "è una minaccia"
+
                 return
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NXDOMAIN:
                 line="timestamp, "+str(client) +", "+str(nameserver)+", "+str(dns.qd[0].name)
                 sito= dns.qd[0].name
                 result = re.match("(.)*.local$|(.)*.?unimo(re)?.it$", sito,re.IGNORECASE)
 
-                if result == None:
+                if result == None :
+                    ##anche qui,stampo solo i siti che risultano errati ma che NON sono universitari
                     scrivi(line,output_R_no)
 
     except Exception:
