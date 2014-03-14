@@ -12,14 +12,22 @@ type_table = {}  # This is a lookup table for DNS query types
 
 dns_whitelist = []
 
+def scrivi(str,file):
+    #print "voglio scrivere ",str," su file ",file
+    str=str[:]+"\n"
+    file.write(str)
+
 
 def loadDns():
     #funzione per il caricamento dinamico dei dns(va poi implementato)
     global dns_whitelist
     with open('dns_permessi.csv', 'rb') as csvfile:
         reader=csv.reader(csvfile, delimiter=',', quotechar='|')
+        reader=list(reader)[0]
         for i in reader:
-            dns_whitelist.append(i[0])
+            dns_whitelist.append(i)
+
+    print dns_whitelist , "questa è la whitelisttttttttttttttttttttttttttttttttttttttttttttttttttt"
 
 def initialize_tables():
     global type_table
@@ -38,7 +46,7 @@ def initialize_tables():
 
 
 
-def processa(src, dst, sport, dport, data,vett_siti_err,vett_siti_ok):
+def processa(src, dst, sport, dport, data,vett_siti_err,vett_siti_ok,output_da_risposta_nxdomain,output_da_richiesta_dns_nowl):
     if len(dns_whitelist) == 0:
         loadDns()
 
@@ -49,7 +57,10 @@ def processa(src, dst, sport, dport, data,vett_siti_err,vett_siti_ok):
         if dns.qr == dpkt.dns.DNS_Q:#dport == 53 :
             # UDP/53 is a DNS query
             if nameserver not in dns_whitelist:
-                print "timestamp, ",client ,", ",nameserver,", domain"
+                line="timestamp, "+str(client) +", "+str(nameserver)+", domain"
+                print line,"URCAAAAAAAAAAAAAAAAAAAAAAAAAAA",nameserver," non è in ",dns_whitelist
+                scrivi(line,output_da_richiesta_dns_nowl)
+
         if dns.qr == dpkt.dns.DNS_R:#sport == 53:
             # UDP/53 is a DNS response
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR:
@@ -57,13 +68,29 @@ def processa(src, dst, sport, dport, data,vett_siti_err,vett_siti_ok):
                 controlla_dns(nameserver, client, sport, dport, data)
                 #poi bisogna anche controllare se l'url non e malevolo(meglio chiedere al prof qui)
 
+
+######stampa per debug grossolano########
+######################################################################
                 sito_ok=dns.qd[0].name
-                vett_siti_ok.append(sito_ok)
+                if sito_ok not in vett_siti_ok:
+                    vett_siti_ok.append(sito_ok)
+####################################################################
+
                 return vett_siti_err,vett_siti_ok
             ##arriva qui e torna al for, non fai piu nulla qui
             #print "responding to ", dns.id, "dns.qr is ", dns.qr, " inviata da '", client, "' inviata al DNS '", nameserver, "'"
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NXDOMAIN:
-                print "timestamp, ",client ,", ",nameserver,", ",dns.qr ,", ",dns.qd[0].name
+                line="timestamp, "+str(client) +", "+str(nameserver)+", "+str(dns.qr) +", "+str(dns.qd[0].name)
+                print line
+                scrivi(line,output_da_risposta_nxdomain)
+
+######stampa per debug grossolano########
+###########################################################
+                sito_ko=dns.qd[0].name
+                if sito_ko not in vett_siti_err:
+                    vett_siti_err.append(sito_ko)
+###########################################################
+
     except Exception:
         print "Errore Data"
 

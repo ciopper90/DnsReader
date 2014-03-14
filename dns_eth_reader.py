@@ -6,6 +6,35 @@ import subprocess
 import dns_core
 
 
+output_da_risposta_nxdomain=None
+output_da_richiesta_dns_nowl=None
+
+
+def apri_output(uno,due):
+    print "apro", uno, " e apro",due
+    global output_da_risposta_nxdomain
+    output_da_risposta_nxdomain = open(uno,"w")
+    #output_da_risposta_nxdomain.write("This Text is going to out file\nLook at it and see\n")
+    global output_da_richiesta_dns_nowl
+    output_da_richiesta_dns_nowl = open(due,"w")
+    #output_da_richiesta_dns_nowl.write("This Text is going to out file\nLook at it and see\n")
+    if output_da_richiesta_dns_nowl!=None and output_da_risposta_nxdomain!=None:
+        print "aperti!"
+        return True
+    else:
+        return False
+
+
+def chiudi_file():
+    global output_da_risposta_nxdomain
+    output_da_risposta_nxdomain.close()
+
+    global output_da_richiesta_dns_nowl
+    output_da_richiesta_dns_nowl.close()
+
+
+
+
 type_table = {}  # This is a lookup table for DNS query types
 
 
@@ -55,12 +84,17 @@ def main() :
         #sys.exipc = pcap.pcap()
     initialize_tables()
 
-    pc.setfilter('port 53')
+    predicato_di_filtro='port 53'
+    pc.setfilter(predicato_di_filtro)
     print 'listening on %s: %s' % (pc.name, pc.filter)
     vettore_siti_errore=[]
     vettore_siti_ok=[]
+    apri_output('output_da_risposta_nxdomain','output_da_richiesta_dns_nowl')
     for (src, sport, dst, dport, data ) in udp_iterator(pc) :
-        dns_core.processa(src,dst,sport,dport,data,vettore_siti_errore,vettore_siti_ok)
+        dns_core.processa(src,dst,sport,dport,data,vettore_siti_errore,vettore_siti_ok,output_da_risposta_nxdomain,output_da_richiesta_dns_nowl)
+
+
+    chiudi_file()
 
 
 if __name__ == "__main__" :

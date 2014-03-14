@@ -10,6 +10,35 @@ import pcap
 import subprocess
 import dns_core
 
+
+output_da_risposta_nxdomain=None
+output_da_richiesta_dns_nowl=None
+
+
+def apri_output(uno,due):
+    print "apro", uno, " e apro",due
+    global output_da_risposta_nxdomain
+    output_da_risposta_nxdomain = open(uno,"w")
+    #output_da_risposta_nxdomain.write("This Text is going to out file\nLook at it and see\n")
+    global output_da_richiesta_dns_nowl
+    output_da_richiesta_dns_nowl = open(due,"w")
+    #output_da_richiesta_dns_nowl.write("This Text is going to out file\nLook at it and see\n")
+    if output_da_richiesta_dns_nowl!=None and output_da_risposta_nxdomain!=None:
+        print "aperti!"
+        return True
+    else:
+        return False
+
+
+def chiudi_file():
+    global output_da_risposta_nxdomain
+    output_da_risposta_nxdomain.close()
+
+    global output_da_richiesta_dns_nowl
+    output_da_richiesta_dns_nowl.close()
+
+
+
 type_table={} # This is a lookup table for DNS query types
 
 def initialize_tables() :
@@ -86,13 +115,17 @@ def main() :
         #Use -f FILENAME to read a packet capture file"""
         #sys.exit(2)
     initialize_tables()
-
     vettore_siti_errore=[]
     vettore_siti_ok=[]
+    a=apri_output('output_da_risposta_nxdomain','output_da_richiesta_dns_nowl')
+    if a!= True:
+        return 55555
+    #print output_da_risposta_nxdomain,output_da_richiesta_dns_nowl,"vediiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"
+
     for (src, sport, dst, dport, data ) in udp_iterator(pc) :
-        vettore_siti_errore,vettore_siti_ok=dns_core.processa(src,dst,sport,dport,data,vettore_siti_errore,vettore_siti_ok)
-       # print "stampo ", vettore_siti
-        #vettore_siti=list(vettore_siti_b)
+        vettore_siti_errore,vettore_siti_ok=dns_core.processa(src,dst,sport,dport,data,vettore_siti_errore,vettore_siti_ok,output_da_risposta_nxdomain,output_da_richiesta_dns_nowl)
+
+    chiudi_file()
 
     ## in questa lista ho tutte le richieste che mi hanno provocato un fault
     print "Tutte le richieste di siti rilevate che NON ESISTONO sono elencate in questa lista: "
