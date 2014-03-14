@@ -58,7 +58,7 @@ def processa(src, dst, sport, dport, data,vett_siti_err,vett_siti_ok,output_da_r
             # UDP/53 is a DNS query
             if nameserver not in dns_whitelist:
                 line="timestamp, "+str(client) +", "+str(nameserver)+", domain"
-                print line,"URCAAAAAAAAAAAAAAAAAAAAAAAAAAA",nameserver," non è in ",dns_whitelist
+               # print line,"URCAAAAAAAAAAAAAAAAAAAAAAAAAAA",nameserver," non è in ",dns_whitelist
                 scrivi(line,output_da_richiesta_dns_nowl)
 
         if dns.qr == dpkt.dns.DNS_R:#sport == 53:
@@ -68,26 +68,42 @@ def processa(src, dst, sport, dport, data,vett_siti_err,vett_siti_ok,output_da_r
                 controlla_dns(nameserver, client, sport, dport, data)
                 #poi bisogna anche controllare se l'url non e malevolo(meglio chiedere al prof qui)
 
+                sito= dns.qd[0].name
+
+                if sito != " fa regex qui non permesse":
+
 
 ######stampa per debug grossolano########
 ######################################################################
-                sito_ok=dns.qd[0].name
-                if sito_ok not in vett_siti_ok:
-                    vett_siti_ok.append(sito_ok)
+                    print "RISPOSTA a richiesta risoluzione esistente e permessa"
+                    sito_ok=sito
+                    if sito_ok not in vett_siti_ok:
+                        vett_siti_ok.append(sito_ok)
 ####################################################################
+                else:
+                    print "RISPOSTA dove il sito richiesto esistente è noto come non sicuro"
 
                 return vett_siti_err,vett_siti_ok
             ##arriva qui e torna al for, non fai piu nulla qui
             #print "responding to ", dns.id, "dns.qr is ", dns.qr, " inviata da '", client, "' inviata al DNS '", nameserver, "'"
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NXDOMAIN:
                 line="timestamp, "+str(client) +", "+str(nameserver)+", "+str(dns.qr) +", "+str(dns.qd[0].name)
-                print line
-                scrivi(line,output_da_risposta_nxdomain)
+                #print line
+
+                sito= dns.qd[0].name
+                sito_ko=""
+                if sito == " fa regex qui che è unimore.it o unimo.it":
+                    print "RISPOSTA A RICHIESTA CON NXDOMAIN È ok"
+
+                else:
+                    print "RISPOSTA A richista CON nxdomain è a rischio "
+                    scrivi(line,output_da_risposta_nxdomain)
+                    sito_ko=sito
 
 ######stampa per debug grossolano########
 ###########################################################
-                sito_ko=dns.qd[0].name
-                if sito_ko not in vett_siti_err:
+
+                if sito_ko not in vett_siti_err and sito_ko!="":
                     vett_siti_err.append(sito_ko)
 ###########################################################
 
