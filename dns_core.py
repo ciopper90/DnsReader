@@ -16,12 +16,10 @@ dns_whitelist = []
 def loadDns():
     #funzione per il caricamento dinamico dei dns(va poi implementato)
     global dns_whitelist
-    #dns_whitelist = ['192.168.1.1' , '8.8.8.8']
     with open('dns_permessi.csv', 'rb') as csvfile:
-        dns_whitelist = list(csv.reader(csvfile, delimiter=',', quotechar='|'))[0]
-        #print " è stato letto: ",dns_whitelist," poiiiiiiiiiiiiiiiiiii"
-        #for row in dns_whitelist:
-        #    print row
+        reader=csv.reader(csvfile, delimiter=',', quotechar='|')
+        for i in reader:
+            dns_whitelist.append(i[0])
 
 def initialize_tables():
     global type_table
@@ -99,8 +97,7 @@ def processa(src, dst, sport, dport, data,vett_siti_err,vett_siti_ok):
 
 def controlla_dns(nameserver, client, sport, dport, data):
     #controlla se il dns e valido oppure no
-    ok=0
     if nameserver not in dns_whitelist:
-        print "dns non autorizzato " , nameserver , " contattato da ", client, " non presente in ", dns_whitelist
-
+        #timestamp,dst,src,namedomain,address
+        print client,", ",nameserver,", "
     return
