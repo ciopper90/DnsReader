@@ -111,7 +111,7 @@ def processa(src, dst, sport, dport, data):
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NXDOMAIN:
                 line="timestamp, "+str(client) +", "+str(nameserver)+", "+str(dns.qd[0].name)
                 sito= dns.qd[0].name
-                result = re.match("(.)*.local$", sito,re.IGNORECASE)
+                result = re.match("(.)*.local$|(.)*.?unimo(re)?.it$", sito,re.IGNORECASE)
 
                 if result == None:
                     scrivi(line,output_R_no)
