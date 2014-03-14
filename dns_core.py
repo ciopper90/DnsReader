@@ -43,57 +43,64 @@ def initialize_tables():
 def processa(src, dst, sport, dport, data,vett_siti_err,vett_siti_ok):
     if len(dns_whitelist) == 0:
         loadDns()
-    # Uncomment if you want to see all UDP packets
-    # print "from ", socket.inet_ntoa(src),":",sport, " to ", socket.inet_ntoa(dst),":",dport
-    #if dport == 53 :
-    #    # UDP/53 is a DNS query
-    #    dns = dpkt.dns.DNS(data)
-    #    if dns.opcode != dpkt.dns.DNS_QUERY :
-    #        print "A DNS packet was sent to the nameserver, but the opcode was %d instead of DNS_QUERY (this is a software error)" % dns.opcode
-    #    if dns.qr != dpkt.dns.DNS_Q :
-    #        print "A DNS packet was sent to the name server, but dns.qr is not 0 and should be. It is %d" % dns.qr
-    #    print "query for ", dns.qd[0].name, "ID is ", dns.id, "dns.qr is ", dns.qr, "query type is ", dns.qd[0].type, type_table[dns.qd[0].type]
-    #    print "dns.qd is ", dns.qd
-   # print "ricevo vettore siti : ", vettore_siti
-    if sport == 53:
-        src = socket.inet_ntoa(src)
-        dst = socket.inet_ntoa(dst)
-        # trasforma da binario a "umano" l'indirizzo ip (quadrupla di interi)
-        #print "%s -> %s" % (src, dst)
-        # UDP/53 is a DNS response
-        try:
+
+    try:
+
+        dns = dpkt.dns.DNS(data)
+        if dns.qr == dpkt.dns.DNS_Q:#dport == 53 :
+            # UDP/53 is a DNS query
+            # quindi è una domanda query
+
+
+                client = socket.inet_ntoa(src)
+                nameserver = socket.inet_ntoa(dst)
+                if dns.opcode != dpkt.dns.DNS_QUERY :
+                    print ""#"A DNS packet was sent to the nameserver, but the opcode was %d instead of DNS_QUERY (this is a software error)" % dns.opcode
+
+                if nameserver not in dns_whitelist:
+                    print "richiesta a dns",nameserver," non in whitelist da parte di",client," lista dns",dns_whitelist
+
+
+
+        if dns.qr == dpkt.dns.DNS_R:#sport == 53:
+            # UDP/53 is a DNS response
+            ## qui sono risposte
+
+            # trasforma da binario a "umano" l'indirizzo ip (quadrupla di interi)
+            nameserver = socket.inet_ntoa(src)
+            client = socket.inet_ntoa(dst)
+
+
             dns = dpkt.dns.DNS(data)
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR:
                 #questo e il caso in cui non ci siano errori
-                controlla_dns(src, dst, sport, dport, data)
+                controlla_dns(nameserver, client, sport, dport, data)
                 #poi bisogna anche controllare se l'url non e malevolo(meglio chiedere al prof qui)
 
                 sito_ok=dns.qd[0].name
                 vett_siti_ok.append(sito_ok)
                 return vett_siti_err,vett_siti_ok
             ##arriva qui e torna al for, non fai piu nulla qui
-            print "responding to ", dns.id, "dns.qr is ", dns.qr, " inviata da '", dst, "' inviata al DNS '", src, "'"
+            print "responding to ", dns.id, "dns.qr is ", dns.qr, " inviata da '", client, "' inviata al DNS '", nameserver, "'"
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NXDOMAIN:
                 print "There is no name in this domain"
-            ##stampa l'url ricercat
-            ##qui bisogna controllare se risulta essere un url valida oppure no
-            sito=dns.qd[0].name
-            print "dns.qd is ", sito
+                ##stampa l'url ricercat
+                ##qui bisogna controllare se risulta essere un url valida oppure no
+                sito=dns.qd[0].name
+                print "dns.qd is ", sito
             if sito not in list(vett_siti_err):
                 vett_siti_err.append(sito)
-            print ""
-        except Exception:
-            print "Errore Data"
-            pass
+                print ""
+    except Exception:
+        print "Errore Data"
+
     return vett_siti_err,vett_siti_ok
 
 
-def controlla_dns(src, dst, sport, dport, data):
+def controlla_dns(nameserver, client, sport, dport, data):
     #controlla se il dns e valido oppure no
     ok=0
-    for i in dns_whitelist:
-        if i == src:
-            ok=1
-    if ok == 0:
-        print "dns non autorizzato " , src , " contattato da ", dst, " non presente in ", dns_whitelist
+    if nameserver not in dns_whitelist:
+        print "dns non autorizzato " , nameserver , " contattato da ", client, " non presente in ", dns_whitelist
+
     return

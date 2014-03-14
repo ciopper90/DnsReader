@@ -49,7 +49,7 @@ def main() :
     #    pc = dpkt.pcap.Reader( open ( sys.argv[2] ) )
     #else :
     print "inizio"
-    pc = pcap.pcap()
+    pc = pcap.pcap('eth0')
     #print """Use -i INTERFACE to [packet capture from an interface.
         #Use -f FILENAME to read a packet capture file"""
         #sys.exipc = pcap.pcap()
