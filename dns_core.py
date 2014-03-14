@@ -27,7 +27,7 @@ def loadDns():
         for i in reader:
             dns_whitelist.append(i)
 
-    print dns_whitelist , "questa è la whitelisttttttttttttttttttttttttttttttttttttttttttttttttttt"
+    #print dns_whitelist , "questa è la whitelisttttttttttttttttttttttttttttttttttttttttttttttttttt"
 
 def initialize_tables():
     global type_table
