@@ -33,6 +33,7 @@ def open_file():
         scrivi(line,output_R_no)
         line="timestamp, Client,Nameserver,HostNameRichiestoDaRisolvere"
         scrivi(line,output_Q)
+
         return True
     else:
         return False

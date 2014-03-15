@@ -9,7 +9,6 @@ import dns_core
 port=53
 dns_univ=['155.185.1.2','155.185.1.5']
 
-
 sottorete_univ='155.185.0.0/16'
 
 
