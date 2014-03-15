@@ -25,6 +25,14 @@ def open_file():
     global output_Q
     output_Q = open("output_Q","w")
     if output_R_ok!=None and output_R_no!=None and output_Q!=None:
+
+        ##metto un intestazione ai file per capire cosa è e com'è
+        line="timestamp, Client, Nameserver, HostNameRisoltoOK"
+        scrivi(line,output_R_ok)
+        line="timestamp, Client,Nameserver,HostNameRichiestoDaRisolvereNXDOMAIN"
+        scrivi(line,output_R_no)
+        line="timestamp, Client,Nameserver,HostNameRichiestoDaRisolvere"
+        scrivi(line,output_Q)
         return True
     else:
         return False
@@ -109,17 +117,20 @@ def processa(src, dst, sport, dport, data):
         loadSitiMalevoli()
 
     try:
-        client = socket.inet_ntoa(src)
-        nameserver = socket.inet_ntoa(dst)
+
         dns = dpkt.dns.DNS(data)
         if dns.qr == dpkt.dns.DNS_Q:#dport == 53 :
             # UDP/53 is a DNS query
+            client = socket.inet_ntoa(src)
+            nameserver = socket.inet_ntoa(dst)
             if nameserver not in dns_whitelist:
                 line="timestamp, "+str(client) +", "+str(nameserver)+", "+dns.qd[0].name
                 scrivi(line,output_Q)
 
         if dns.qr == dpkt.dns.DNS_R:#sport == 53:
             # UDP/53 is a DNS response
+            nameserver = socket.inet_ntoa(src)
+            client = socket.inet_ntoa(dst)
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR:
                 line="timestamp, "+str(client) +", "+str(nameserver)+", "+str(dns.qd[0].name)
                 sito= dns.qd[0].name
