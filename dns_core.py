@@ -7,6 +7,11 @@ import pcap
 import subprocess
 import csv
 import re
+from datetime import datetime
+
+
+
+
 
 
 type_table = {}  # This is a lookup table for DNS query types
@@ -29,9 +34,9 @@ def open_file():
         ##metto un intestazione ai file per capire cosa è e com'è
         line="timestamp, Client, Nameserver, HostNameRisoltoOK"
         scrivi(line,output_R_ok)
-        line="timestamp, Client,Nameserver,HostNameRichiestoDaRisolvereNXDOMAIN"
+        line="timestamp, Client, Nameserver,HostNameRichiestoDaRisolvereNXDOMAIN"
         scrivi(line,output_R_no)
-        line="timestamp, Client,Nameserver,HostNameRichiestoDaRisolvere"
+        line="timestamp, Client, Nameserver, HostNameRichiestoDaRisolvere"
         scrivi(line,output_Q)
 
         return True
@@ -100,7 +105,7 @@ def udp_iterator(pc):
             if ip.p == dpkt.ip.IP_PROTO_UDP :
                 udp = ip.data
                 # Pass the IP addresses, source port, destination port, and data back to the caller.
-                yield ( ip.src, udp.sport, ip.dst, udp.dport, udp.data)
+                yield ( ip.src, udp.sport, ip.dst, udp.dport, udp.data,ts)
             elif ip.p ==dpkt.ip.IP_PROTO_TCP:
                 print "tcp"
 
@@ -108,32 +113,45 @@ def udp_iterator(pc):
 
 def reader(pc):
     open_file()
-    for (src, sport, dst, dport, data ) in udp_iterator(pc) :
-        processa(src,dst,sport,dport,data)
+    for (src, sport, dst, dport, data,timestamp ) in udp_iterator(pc) :
+        processa(src,dst,sport,dport,data,timestamp)
     close_file()
 
-def processa(src, dst, sport, dport, data):
+def processa(src, dst, sport, dport, data,timestamp):
     if len(dns_whitelist) == 0 or len(malevoli)==0:
         loadDns()
         loadSitiMalevoli()
 
     try:
+        sorgente=socket.inet_ntoa(src)
+        destinazione = socket.inet_ntoa(dst)
+        timestamp="{:.9f}".format(timestamp)
+        timestamp = str(datetime.fromtimestamp( float(timestamp) ))
 
         dns = dpkt.dns.DNS(data)
+
         if dns.qr == dpkt.dns.DNS_Q:#dport == 53 :
             # UDP/53 is a DNS query
-            client = socket.inet_ntoa(src)
-            nameserver = socket.inet_ntoa(dst)
-            if nameserver not in dns_whitelist:
-                line="timestamp, "+str(client) +", "+str(nameserver)+", "+dns.qd[0].name
+            #richiesta
+            #client = sorgente
+            #nameserver = destinazione
+
+            if destinazione not in dns_whitelist:
+                ##NB. il prof vuole SEMPRE lo stesso ordine
+                ## timestamp, client, nameserver, hostname(darisolvere)
+                #print "%s: %f " % ( "quiiiiiiiiiiiiiiiiiiiiii tempoooo", timestamp)
+                line=timestamp+", "+str(sorgente) +", "+str(destinazione)+", "+dns.qd[0].name
                 scrivi(line,output_Q)
 
         if dns.qr == dpkt.dns.DNS_R:#sport == 53:
             # UDP/53 is a DNS response
-            nameserver = socket.inet_ntoa(src)
-            client = socket.inet_ntoa(dst)
+            #nameserver = sorgente
+            #client = destinazione
+            ##NB. il prof vuole SEMPRE lo stesso ordine
+            ## timestamp, client, nameserver, hostname(risolto)
+
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR:
-                line="timestamp, "+str(client) +", "+str(nameserver)+", "+str(dns.qd[0].name)
+                line=timestamp+", "+str(destinazione) +", "+str(sorgente)+", "+str(dns.qd[0].name)
                 sito= dns.qd[0].name
                 result = re.match("(.)*.?unimo(re)?.it$", sito,re.IGNORECASE)
 
@@ -149,7 +167,7 @@ def processa(src, dst, sport, dport, data):
 
                 return
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NXDOMAIN:
-                line="timestamp, "+str(client) +", "+str(nameserver)+", "+str(dns.qd[0].name)
+                line=timestamp+", "+str(destinazione) +", "+str(sorgente)+", "+str(dns.qd[0].name)
                 sito= dns.qd[0].name
                 result = re.match("(.)*.local$|(.)*.?unimo(re)?.it$", sito,re.IGNORECASE)
 
@@ -163,9 +181,10 @@ def processa(src, dst, sport, dport, data):
     return
 
 
-def controlla_dns(nameserver, client, sport, dport, data):
-    "controlla se il dns e valido oppure no"
-    if nameserver not in dns_whitelist:
-        #timestamp,dst,src,namedomain,address
-        print client,", ",nameserver,", "
-    return
+##deprecata e integrata sopra
+#def controlla_dns(nameserver, client, sport, dport, data):
+#    "controlla se il dns e valido oppure no"
+#    if nameserver not in dns_whitelist:
+#        #timestamp,dst,src,namedomain,address
+#        print client,", ",nameserver,", "
+#    return
