@@ -94,7 +94,7 @@ def initialize_tables():
 
 #fine inizializzazioni
 
-def udp_iterator(pc):
+def general_iterator(pc):
     """pc is a pcap.pcap object that listens to the network and returns a packet object when it hears a packet go by"""
     for ts, pkt in pc:
         # parse the packet. Decode the ethertype. If it is IP (IPv4) then process it further
@@ -116,9 +116,14 @@ def udp_iterator(pc):
 
 def reader(pc):
     open_file()
-    for (src, sport, dst, dport, data,timestamp ) in udp_iterator(pc) :
+    processati=0;
+    global errati
+    errati=0
+    for (src, sport, dst, dport, data,timestamp ) in general_iterator(pc) :
         processa(src,dst,sport,dport,data,timestamp)
+        processati=processati+1
     close_file()
+    print "Processati Pacchetti in numero: ",processati, " e pacchetti che danno errore  ",errati
 
 def processa(src, dst, sport, dport, data,timestamp):
     if len(dns_whitelist) == 0 or len(malevoli)==0:
@@ -158,15 +163,18 @@ def processa(src, dst, sport, dport, data,timestamp):
                 sito= dns.qd[0].name
                 result = re.match("(.)*.?unimo(re)?.it$", sito,re.IGNORECASE)
 
-                if result == None and not malevoli.has_key(sito) :
+                if result == None :#and not malevoli.has_key(sito) :
                                 ##è una ricerca precisa di chiave... quindi non è ottima me funziona
                     #print sito
                     ##qui loggo i siti leciti che NON fanno parte di unimore
                     scrivi(line,output_R_ok)
                 else:
-                    if malevoli.has_key(sito) :
+                    #if malevoli.has_key(sito) :
                         ## se è un sito malevolo che è contenuto in quella lista
-                        print "Sito ",sito, "è una minaccia"
+                        #print "Sito ",sito, "è una minaccia"
+                    ##print " Risposta riguardo unimore",sito
+                    ## assegnamento ad occhio al posto che print... già il tutto è lento di suo...
+                    asd=1
 
                 return
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NXDOMAIN:
@@ -179,7 +187,10 @@ def processa(src, dst, sport, dport, data,timestamp):
                     scrivi(line,output_R_no)
 
     except Exception:
-        print "Errore Data"
+        #print "Errore Data"
+        ##la stampa rallenta un casino... meglio assegnamento
+        global errati
+        errati=errati+1
 
     return
 
