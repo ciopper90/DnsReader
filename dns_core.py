@@ -62,21 +62,21 @@ def loadDns():
         for i in reader:
              dns_whitelist.append(i[0])
 
-def loadSitiMalevoli():
-    global malevoli
-    malevoli={}
-    with open('name_malevoli.csv', 'rb') as csvfile:
-		reader=csv.reader(csvfile, delimiter=',', quotechar='|')
+#def loadSitiMalevoli():
+#    global malevoli
+#    malevoli={}
+#    with open('name_malevoli.csv', 'rb') as csvfile:
+#		reader=csv.reader(csvfile, delimiter=',', quotechar='|')
 		#reader=str(reader)[0]
-		for i in reader:
+#		for i in reader:
 
-			if 3<len(i):
+#			if 3<len(i):
 
-				i=i[3].replace("\"", "")
-				#print i
-				if not malevoli.has_key(i) and i != "-":
-					#print i
-					malevoli[i]=i
+#				i=i[3].replace("\"", "")
+#				#print i
+#				if not malevoli.has_key(i) and i != "-":
+#					#print i
+#					malevoli[i]=i
 
 
 
@@ -105,9 +105,12 @@ def udp_iterator(pc):
             if ip.p == dpkt.ip.IP_PROTO_UDP :
                 udp = ip.data
                 # Pass the IP addresses, source port, destination port, and data back to the caller.
-                yield ( ip.src, udp.sport, ip.dst, udp.dport, udp.data,ts)
+                yield ( ip.src, udp.sport, ip.dst, udp.dport, udp.data, ts)
             elif ip.p ==dpkt.ip.IP_PROTO_TCP:
-                print "tcp"
+                tcp=ip.data
+                #print "tcp",socket.inet_ntoa(ip.src), tcp.sport, socket.inet_ntoa(ip.dst), tcp.dport, tcp.data, ts
+                yield ( ip.src, tcp.sport, ip.dst, tcp.dport, tcp.data, ts)
+
 
 
 
@@ -120,7 +123,7 @@ def reader(pc):
 def processa(src, dst, sport, dport, data,timestamp):
     if len(dns_whitelist) == 0 or len(malevoli)==0:
         loadDns()
-        loadSitiMalevoli()
+#        loadSitiMalevoli()
 
     try:
         sorgente=socket.inet_ntoa(src)
@@ -157,7 +160,7 @@ def processa(src, dst, sport, dport, data,timestamp):
 
                 if result == None and not malevoli.has_key(sito) :
                                 ##è una ricerca precisa di chiave... quindi non è ottima me funziona
-                    print sito
+                    #print sito
                     ##qui loggo i siti leciti che NON fanno parte di unimore
                     scrivi(line,output_R_ok)
                 else:
