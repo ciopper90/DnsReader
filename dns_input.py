@@ -64,7 +64,7 @@ def main() :
         if args.q=='0':
             ## non c'è il -q
             print "non c'è -q"
-            crea_risposta=2
+            crea_risposta=1
         else:
             if args.q:
                 print "-q <",args.q,">"
@@ -101,7 +101,10 @@ def main() :
     print predicato_di_filtro
     pc.setfilter(predicato_di_filtro)
     dns_core.reader(pc,crea_risposta,devia_verso)
-    ##se è dato un ip per dare come risoluzione questa è !=0
+    ##crea_risposta == 0 non crea niente
+    ## == 1 Crea Risposta
+    ## == 2 NOSUCHDOMAIN
+
     print "Il tutto è stato eseguito in ",time.time() - start_time, "secondi"
 
 
