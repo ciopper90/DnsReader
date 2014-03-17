@@ -1,9 +1,12 @@
+# -*- coding: utf-8 -*-
 import dpkt, dpkt.dns
 import sys
 import socket
 import pcap
 import subprocess
 import dns_core
+import time
+
 
 
 port=53
@@ -13,6 +16,7 @@ sottorete_univ='155.185.0.0/16'
 
 
 def main() :
+    start_time = time.time()
 
     if len(sys.argv) > 2:
         if sys.argv[1] == "-f" :
@@ -30,6 +34,7 @@ def main() :
         print predicato_di_filtro
         pc.setfilter(predicato_di_filtro)
         dns_core.reader(pc)
+        print "Il tutto è stato eseguito in ",time.time() - start_time, "seconds"
     else:
         print "usare -i ethX oppure -f file.pcap"
 
