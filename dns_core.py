@@ -264,14 +264,13 @@ def manda_risposta_fantoccio(devia_verso,dst,src,da_porta):
     #sono già invertite e pronte da utilizzare
 
     ##creo risposta fantoccio
-    ##d = DNSRecord(DNSHeader(qr=1,aa=1,ra=1), q=DNSQuestion("abc.com"),a=RR("abc.com",rdata=A("1.2.3.4")))
-
-
     mypacket = scapy.IP(dst=dst,src=src)/scapy.UDP(dport=da_porta)/scapy.DNS(qd=scapy.DNSQR(qname=devia_verso))
+    send(mypacket)
 
-    a=1
 
 
 def manda_risposta_NXD(dst,src,da_porta):
     ## qui ho già dst e src giusti da usare
-    a=1
+    mypacket = scapy.IP(dst=dst,src=src)/scapy.UDP(dport=da_porta)/scapy.DNS(qd=scapy.DNSQR(qname="nonesiste"))
+    send(mypacket)
+
