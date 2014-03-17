@@ -16,6 +16,7 @@ from datetime import datetime
 
 type_table = {}  # This is a lookup table for DNS query types
 dns_whitelist = []
+dns_blacklist= set()
 malevoli={}
 output_R_ok=""
 output_R_no=""
@@ -29,7 +30,10 @@ def open_file():
     output_R_no = open("output_R_no","w")
     global output_Q
     output_Q = open("output_Q","w")
-    if output_R_ok!=None and output_R_no!=None and output_Q!=None:
+    global output_ALARM
+    output_ALARM = open("output_ALARM","w")
+
+    if output_R_ok!=None and output_R_no!=None and output_Q!=None and output_ALARM!=None:
 
         ##metto un intestazione ai file per capire cosa è e com'è
         line="timestamp, Client, Nameserver, HostNameRisoltoOK"
@@ -38,6 +42,8 @@ def open_file():
         scrivi(line,output_R_no)
         line="timestamp, Client, Nameserver, HostNameRichiestoDaRisolvere"
         scrivi(line,output_Q)
+        line="timestamp, Client, Nameserver, MotivoAllarme"
+        scrivi(line,output_ALARM)
 
         return True
     else:
@@ -50,17 +56,30 @@ def close_file():
     output_R_no.close()
     global output_Q
     output_Q.close()
+    global output_ALARM
+    output_ALARM.close()
 
 def scrivi(str,file):
     str=str[:]+"\n"
     file.write(str)
+    file.flush()
 
-def loadDns():
+def loadDns_black():
+    global dns_blacklist
+    with open('dns_proibiti.csv', 'rb') as csvfile:
+        reader=csv.reader(csvfile, delimiter=',', quotechar='|')
+        for i in reader:
+             dns_blacklist.add(socket.inet_aton(i[0])) # prende una stringa e la trasforma in numero binario!
+                                                          # faccio controllo hash ultra rapido
+
+
+def loadDns_white():
     global dns_whitelist
     with open('dns_permessi.csv', 'rb') as csvfile:
         reader=csv.reader(csvfile, delimiter=',', quotechar='|')
         for i in reader:
              dns_whitelist.append(i[0])
+
 
 #def loadSitiMalevoli():
 #    global malevoli
@@ -126,8 +145,9 @@ def reader(pc):
     print "Processati Pacchetti in numero: ",processati, " e pacchetti che danno errore  ",errati
 
 def processa(src, dst, sport, dport, data,timestamp):
-    if len(dns_whitelist) == 0 or len(malevoli)==0:
-        loadDns()
+    if len(dns_whitelist) == 0 or len(malevoli)==0 or len(dns_blacklist)==0:
+        loadDns_white()
+        loadDns_black()
 #        loadSitiMalevoli()
 
     try:
@@ -150,6 +170,11 @@ def processa(src, dst, sport, dport, data,timestamp):
                 #print "%s: %f " % ( "quiiiiiiiiiiiiiiiiiiiiii tempoooo", timestamp)
                 line=timestamp+", "+str(sorgente) +", "+str(destinazione)+", "+dns.qd[0].name
                 scrivi(line,output_Q)
+            if dst in dns_blacklist:
+                ## è un allarme!
+                ##lascio in binario in quanto faccio la comparazione in binario è ultrarapida
+                line=timestamp+", "+str(sorgente) +", "+str(destinazione)+", DomandaADnsNonLecito"
+                scrivi(line,output_ALARM)
 
         if dns.qr == dpkt.dns.DNS_R:#sport == 53:
             # UDP/53 is a DNS response
@@ -175,6 +200,12 @@ def processa(src, dst, sport, dport, data,timestamp):
                     ##print " Risposta riguardo unimore",sito
                     ## assegnamento ad occhio al posto che print... già il tutto è lento di suo...
                     asd=1
+
+                if src in dns_blacklist:
+                    ## è un allarme!
+                    ##lascio in binario in quanto faccio la comparazione in binario è ultrarapida
+                    line=timestamp+", "+str(destinazione) +", "+str(sorgente)+", RispostaDaDnsNonLecito"
+                    scrivi(line,output_ALARM)
 
                 return
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NXDOMAIN:

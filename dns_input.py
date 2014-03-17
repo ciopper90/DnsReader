@@ -23,10 +23,10 @@ def main() :
 
         app=''
         for dns_selez in dns_univ:
-            app=app+' not (src host '+ dns_selez + ' and not dst host '+ sottorete_univ+' ) and not (dst host '+ dns_selez + ' and not src host '+ sottorete_univ+' ) and '
+            app=app+' not (src host '+ dns_selez + ' and not dst net '+ sottorete_univ+' ) and not (dst host '+ dns_selez + ' and not src net '+ sottorete_univ+' ) and '
 
 
-        predicato_di_filtro='port '+ str(port)+' and '+app+' (host '+sottorete_univ+' )'
+        predicato_di_filtro='port '+ str(port)+' and '+app+' (net '+sottorete_univ+' )'
         print predicato_di_filtro
         pc.setfilter(predicato_di_filtro)
         dns_core.reader(pc)
