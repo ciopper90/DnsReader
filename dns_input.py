@@ -28,7 +28,7 @@ def main() :
     crea_risposta=0 #non crea risposta
     #crea_risposta=1 #crea risposta
     #crea_risposta=2 #risponde con no such domain
-    da_porta=-1
+    da_porta=None
 
 
 
@@ -37,10 +37,11 @@ def main() :
 
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", help="da file")
-    parser.add_argument("-i", help="da input")
-    parser.add_argument("-p", help="risposta finta da porta")
-    parser.add_argument("-q", help="risoluzione finta",nargs='?',default='0')
+    parser.add_argument("-f", help="Da file")
+    parser.add_argument("-i", help="Da input")
+    parser.add_argument("-p", help="Risposta finta da porta")
+    parser.add_argument("-q", help="Risoluzione finta",nargs='?',default='0')
+    parser.add_argument("-out", help="Nome dei file output, default 'output_xxxxx'",default='output')
 
     ## se c'è p ma non c'è q dice NO SUCH DOMAIN
     ## in ho  -p <port> -q ->  porta su kitten war
@@ -110,7 +111,7 @@ def main() :
     predicato_di_filtro='port '+ str(port)+' and '+app+' (net '+sottorete_univ+' )'
     print predicato_di_filtro
     pc.setfilter(predicato_di_filtro)
-    dns_core.reader(pc,crea_risposta,devia_verso,da_porta)
+    dns_core.reader(pc,args.out,crea_risposta,devia_verso,da_porta)
     ##crea_risposta == 0 non crea niente
     ## == 1 Crea Risposta
     ## == 2 NOSUCHDOMAIN

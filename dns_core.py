@@ -23,15 +23,15 @@ output_R_no=""
 output_Q=""
 
 #inizio inizializzazioni
-def open_file():
+def open_file(nome_out):
     global output_R_ok
-    output_R_ok = open("output_R_ok","w")
+    output_R_ok = open(nome_out+"_R_ok","w")
     global output_R_no
-    output_R_no = open("output_R_no","w")
+    output_R_no = open(nome_out+"_R_no","w")
     global output_Q
-    output_Q = open("output_Q","w")
+    output_Q = open(nome_out+"_Q","w")
     global output_ALARM
-    output_ALARM = open("output_ALARM","w")
+    output_ALARM = open(nome_out+"_ALARM","w")
 
     if output_R_ok!=None and output_R_no!=None and output_Q!=None and output_ALARM!=None:
 
@@ -133,8 +133,8 @@ def general_iterator(pc):
 
 
 
-def reader(pc,crea_risposta,devia_verso,da_porta):
-    open_file()
+def reader(pc,nome_out,crea_risposta,devia_verso,da_porta):
+    open_file(nome_out)
     processati=0;
     global errati
     errati=0
