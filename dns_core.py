@@ -137,6 +137,14 @@ def general_iterator(pc):
 
 def reader(pc,nome_out,crea_risposta,devia_verso,da_porta):
     open_file(nome_out)
+
+    if crea_risposta==0:
+        print "Non creo risposte, solo logging"
+    elif crea_risposta==1:
+         print "Creo risposte, rimando verso: ",devia_verso
+    elif crea_risposta==2:
+         print "Rispondo No Such Domain"
+
     processati=0;
     global errati
     errati=0
