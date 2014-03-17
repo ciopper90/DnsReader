@@ -28,6 +28,7 @@ def main() :
     crea_risposta=0 #non crea risposta
     #crea_risposta=1 #crea risposta
     #crea_risposta=2 #risponde con no such domain
+    da_porta=-1
 
 
 
@@ -50,31 +51,40 @@ def main() :
     args = parser.parse_args()
     if args.verbosity:
         print "verbosity turned on"
+
+    if args.f and args.i:
+        print " -f e -i sono ad uso: UNO ESCLUDE L'ALTRO"
+        exit (2)
+
     if args.f:
         selettore=1
         da_dove=args.f
+        if args.p or args.q!='0':
+            print " con -f non sono ammessi altri -p / -q vari !"
+            exit (3)
+
     if args.i:
         selettore=2
         da_dove=args.i
 
-    if args.p:
-        crea_risposta=1
-        da_porta=args.i
+        if args.p:
+            crea_risposta=1
+            da_porta=args.i
 
-        if args.q=='0':
-            ## non c'è il -q
-            print "non c'è -q"
-            crea_risposta=2
-        else:
-            if args.q:
-                print "-q <",args.q,">"
-                crea_risposta=1
-                devia_verso=args.q
+            if args.q=='0':
+                ## non c'è il -q
+                print "non c'è -q"
+                crea_risposta=2
             else:
-                a=1
-                print "-q <vuoto>"
-                crea_risposta=1
-                devia_verso='64.64.4.109'#kitten war
+                if args.q:
+                    print "-q <",args.q,">"
+                    crea_risposta=1
+                    devia_verso=args.q
+                else:
+                    a=1
+                    print "-q <vuoto>"
+                    crea_risposta=1
+                    devia_verso='64.64.4.109'#kitten war
 
 
 
@@ -100,7 +110,7 @@ def main() :
     predicato_di_filtro='port '+ str(port)+' and '+app+' (net '+sottorete_univ+' )'
     print predicato_di_filtro
     pc.setfilter(predicato_di_filtro)
-    dns_core.reader(pc,crea_risposta,devia_verso)
+    dns_core.reader(pc,crea_risposta,devia_verso,da_porta)
     ##crea_risposta == 0 non crea niente
     ## == 1 Crea Risposta
     ## == 2 NOSUCHDOMAIN

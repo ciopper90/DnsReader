@@ -133,18 +133,18 @@ def general_iterator(pc):
 
 
 
-def reader(pc,crea_risposta,devia_verso):
+def reader(pc,crea_risposta,devia_verso,da_porta):
     open_file()
     processati=0;
     global errati
     errati=0
     for (src, sport, dst, dport, data,timestamp ) in general_iterator(pc) :
-        processa(src,dst,sport,dport,data,timestamp,crea_risposta,devia_verso)
+        processa(src,dst,sport,dport,data,timestamp,crea_risposta,devia_verso,da_porta)
         processati=processati+1
     close_file()
     print "Processati Pacchetti in numero: ",processati, " e pacchetti che danno errore  ",errati
 
-def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso):
+def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso,da_porta):
     if len(dns_whitelist) == 0 or len(malevoli)==0 or len(dns_blacklist)==0:
         loadDns_white()
         loadDns_black()
@@ -175,9 +175,9 @@ def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso):
                 ##lascio in binario in quanto faccio la comparazione in binario è ultrarapida
 
                 if crea_risposta==1:
-                    manda_risposta_fantoccio(devia_verso,src,dst)
+                    manda_risposta_fantoccio(devia_verso,src,dst,da_porta)
                 if crea_risposta==2:
-                    manda_risposta_NXD(src,dst)
+                    manda_risposta_NXD(src,dst,da_porta)
                 ##ricordo che la src sarà il destinatario e la dst sarà la sorgente
 
                 line=timestamp+", "+str(sorgente) +", "+str(destinazione)+", DomandaADnsNonLecito"
@@ -242,7 +242,7 @@ def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso):
 #    return
 
 
-def manda_risposta_fantoccio(devia_verso,dst,src):
+def manda_risposta_fantoccio(devia_verso,dst,src,da_porta):
     ##ricordo che la src e la dst qui sono invertite rispetto a quando le ho prese
     #sono già invertite e pronte da utilizzare
 
@@ -252,6 +252,6 @@ def manda_risposta_fantoccio(devia_verso,dst,src):
     a=1
 
 
-def manda_risposta_NXD(dst,src):
+def manda_risposta_NXD(dst,src,da_porta):
     ## qui ho già dst e src giusti da usare
     a=1
