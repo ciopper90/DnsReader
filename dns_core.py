@@ -133,18 +133,18 @@ def general_iterator(pc):
 
 
 
-def reader(pc):
+def reader(pc,crea_risposta,devia_verso):
     open_file()
     processati=0;
     global errati
     errati=0
     for (src, sport, dst, dport, data,timestamp ) in general_iterator(pc) :
-        processa(src,dst,sport,dport,data,timestamp)
+        processa(src,dst,sport,dport,data,timestamp,crea_risposta,devia_verso)
         processati=processati+1
     close_file()
     print "Processati Pacchetti in numero: ",processati, " e pacchetti che danno errore  ",errati
 
-def processa(src, dst, sport, dport, data,timestamp):
+def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso):
     if len(dns_whitelist) == 0 or len(malevoli)==0 or len(dns_blacklist)==0:
         loadDns_white()
         loadDns_black()
@@ -173,6 +173,13 @@ def processa(src, dst, sport, dport, data,timestamp):
             if dst in dns_blacklist:
                 ## è un allarme!
                 ##lascio in binario in quanto faccio la comparazione in binario è ultrarapida
+
+                if crea_risposta==1:
+                    manda_risposta_fantoccio(devia_verso,src,dst)
+                if crea_risposta==2:
+                    manda_risposta_NXD(src,dst)
+                ##ricordo che la src sarà il destinatario e la dst sarà la sorgente
+
                 line=timestamp+", "+str(sorgente) +", "+str(destinazione)+", DomandaADnsNonLecito"
                 scrivi(line,output_ALARM)
 
@@ -233,3 +240,18 @@ def processa(src, dst, sport, dport, data,timestamp):
 #        #timestamp,dst,src,namedomain,address
 #        print client,", ",nameserver,", "
 #    return
+
+
+def manda_risposta_fantoccio(devia_verso,dst,src):
+    ##ricordo che la src e la dst qui sono invertite rispetto a quando le ho prese
+    #sono già invertite e pronte da utilizzare
+
+    ##creo risposta fantoccio
+
+
+    a=1
+
+
+def manda_risposta_NXD(dst,src):
+    ## qui ho già dst e src giusti da usare
+    a=1
