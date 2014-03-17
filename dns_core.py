@@ -8,7 +8,7 @@ import subprocess
 import csv
 import re
 from datetime import datetime
-from scapy.all import *
+#from scapy.all import *
 import sys
 import os
 import fcntl
@@ -263,14 +263,16 @@ def manda_risposta_fantoccio(devia_verso,dst,src,da_porta):
     ##ricordo che la src e la dst qui sono invertite rispetto a quando le ho prese
     #sono già invertite e pronte da utilizzare
 
+    print "risposta fantoccio inviata"
     ##creo risposta fantoccio
-    mypacket = scapy.IP(dst=dst,src=src)/scapy.UDP(dport=da_porta)/scapy.DNS(qd=scapy.DNSQR(qname=devia_verso))
-    send(mypacket)
+   # mypacket = scapy.IP(dst=dst,src=src)/scapy.UDP(dport=da_porta)/scapy.DNS(qd=scapy.DNSQR(qname=devia_verso))
+   # send(mypacket)
 
 
 
 def manda_risposta_NXD(dst,src,da_porta):
     ## qui ho già dst e src giusti da usare
-    mypacket = scapy.IP(dst=dst,src=src)/scapy.UDP(dport=da_porta)/scapy.DNS(qd=scapy.DNSQR(qname="nonesiste"))
-    send(mypacket)
+    print "risposta NXD mandata"
+    #mypacket = scapy.IP(dst=dst,src=src)/scapy.UDP(dport=da_porta)/scapy.DNS(qd=scapy.DNSQR(qname="nonesiste"))
+    #send(mypacket)
 
