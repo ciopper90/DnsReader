@@ -40,8 +40,11 @@ def main() :
     parser.add_argument("-i", help="da input")
     parser.add_argument("-p", help="risposta finta da porta")
     parser.add_argument("-q", help="risoluzione finta",nargs='?',default='0')
-    #parser.add_argument("-q", help="risoluzione finta")
-    ## se non c'è q ma c'è p do NO SUCH DOMAIN
+
+    ## se c'è p ma non c'è q dice NO SUCH DOMAIN
+    ## in ho  -p <port> -q ->  porta su kitten war
+    ## se no -p <port> -q <ip_reindirizzamento> porta su quell'ip la risoluzione
+
     parser.add_argument("-v","--verbosity", help="increase output verbosity")
 
     args = parser.parse_args()
@@ -58,20 +61,20 @@ def main() :
         crea_risposta=1
         da_porta=args.i
 
-    if args.q=='0':
-        ## non c'è il -q
-        print "non c'è -q"
-        crea_risposta=2
-    else:
-        if args.q:
-            print "-q <",args.q,">"
-            crea_risposta=1
-            devia_verso=args.q
+        if args.q=='0':
+            ## non c'è il -q
+            print "non c'è -q"
+            crea_risposta=2
         else:
-            a=1
-            print "-q <vuoto>"
-            crea_risposta=1
-            devia_verso='64.64.4.109'#kitten war
+            if args.q:
+                print "-q <",args.q,">"
+                crea_risposta=1
+                devia_verso=args.q
+            else:
+                a=1
+                print "-q <vuoto>"
+                crea_risposta=1
+                devia_verso='64.64.4.109'#kitten war
 
 
 
