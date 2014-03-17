@@ -8,9 +8,11 @@ import subprocess
 import csv
 import re
 from datetime import datetime
-
-
-
+from scapy.all import *
+import sys
+import os
+import fcntl
+import time
 
 
 
@@ -138,10 +140,25 @@ def reader(pc,nome_out,crea_risposta,devia_verso,da_porta):
     processati=0;
     global errati
     errati=0
+    fl = fcntl.fcntl(sys.stdin.fileno(), fcntl.F_GETFL)
+    fcntl.fcntl(sys.stdin.fileno(), fcntl.F_SETFL, fl | os.O_NONBLOCK)
+    print "Premi un pulsante per terminare , altrimenti aspetta"
+
     for (src, sport, dst, dport, data,timestamp ) in general_iterator(pc) :
+
         processa(src,dst,sport,dport,data,timestamp,crea_risposta,devia_verso,da_porta)
         processati=processati+1
+        try:
+            stdin = sys.stdin.read()
+            if "\n" in stdin or "\r" in stdin:
+                print "terminato prima della Conclusione naturale"
+                break
+        except IOError:
+            pass
+
+
     close_file()
+
     print "Processati Pacchetti in numero: ",processati, " e pacchetti che danno errore  ",errati
 
 def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso,da_porta):
@@ -175,7 +192,7 @@ def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso,da
                 ##lascio in binario in quanto faccio la comparazione in binario è ultrarapida
 
                 if crea_risposta==1:
-                    manda_risposta_fantoccio(devia_verso,src,dst,da_porta)
+                    manda_risposta_fantoccio(devia_verso,sorgente,destinazione,da_porta)
                 if crea_risposta==2:
                     manda_risposta_NXD(src,dst,da_porta)
                 ##ricordo che la src sarà il destinatario e la dst sarà la sorgente
@@ -247,7 +264,10 @@ def manda_risposta_fantoccio(devia_verso,dst,src,da_porta):
     #sono già invertite e pronte da utilizzare
 
     ##creo risposta fantoccio
+    ##d = DNSRecord(DNSHeader(qr=1,aa=1,ra=1), q=DNSQuestion("abc.com"),a=RR("abc.com",rdata=A("1.2.3.4")))
 
+
+    mypacket = scapy.IP(dst=dst,src=src)/scapy.UDP(dport=da_porta)/scapy.DNS(qd=scapy.DNSQR(qname=devia_verso))
 
     a=1
 

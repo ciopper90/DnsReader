@@ -85,7 +85,7 @@ def main() :
                     a=1
                     print "-q <vuoto>"
                     crea_risposta=1
-                    devia_verso='64.64.4.109'#kitten war
+                    devia_verso='www.kittenwar.com'#'64.64.4.109'#kitten war
 
 
 
