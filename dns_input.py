@@ -64,7 +64,7 @@ def main() :
         if args.q=='0':
             ## non c'è il -q
             print "non c'è -q"
-            crea_risposta=1
+            crea_risposta=2
         else:
             if args.q:
                 print "-q <",args.q,">"
