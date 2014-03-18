@@ -13,7 +13,7 @@ import sys
 import os
 import fcntl
 import time
-import dnslib
+#import dnslib
 
 
 
@@ -135,13 +135,14 @@ def general_iterator(pc):
 
 def reader(pc,nome_out,crea_risp,devia,da_porta):
     open_file(nome_out)
-    deia_verso=devia
+    global devia_verso
+    devia_verso=devia
     interface_output=da_porta
-    if crea_risposta==0:
+    if crea_risp==0:
         print "Non creo risposte, solo logging"
-    elif crea_risposta==1:
+    elif crea_risp==1:
          print "Creo risposte, rimando verso: ",devia_verso
-    elif crea_risposta==2:
+    elif crea_risp==2:
          print "Rispondo No Such Domain"
 
     processati=0;
@@ -177,7 +178,7 @@ def reader(pc,nome_out,crea_risp,devia,da_porta):
     print "Processati Pacchetti in numero: ",processati, " e pacchetti che danno errore  ",errati
 
 def processa(src, dst, sport, dport, data,timestamp):
-#        loadSitiMalevoli()
+
 
     try:
         sorgente=socket.inet_ntoa(src)
@@ -245,6 +246,7 @@ def processa(src, dst, sport, dport, data,timestamp):
 
 def manda_risposta_fantoccio(dns,src,dst,sport,dport):
     #devo leggere tutti i dati dal pacchetto dns passato alla funzione
+    global devia_verso
     mypacket = scapy.all.IP(dst=src,src=dst)/\
                scapy.all.UDP(dport=sport, sport=dport.dport)/\
                scapy.all.DNS(id=dns.id, qd=dns.qd,aa = 1, qr=1, \

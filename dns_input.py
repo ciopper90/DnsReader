@@ -46,13 +46,15 @@ def main() :
     parser.add_argument("-out", help="Nome dei file output, default 'output_xxxxx'",default='output')
 
     ## se c'è p ma non c'è q dice NO SUCH DOMAIN
-    ## se no -p <port> -q <ip_reindirizzamento> porta su quell'ip la risoluzione
+    ## se devi essere coerente con quello che hai detto stamattina, anche se c'è -p <interfaccia> -q (senza altro)
+    ## manda no such domain quindi scelta ==2 , oppure hai cambiato idea?
+    ## se no -p <port> -q <ip_reindirizzamento> dirige verso quell'ip la risoluzione dns richiesta (spoof+tarocco )
 
-    parser.add_argument("-v","--verbosity", help="increase output verbosity")
+    ## la risposta è creata  se mette -p <int> [ -q [ip] ]
+
 
     args = parser.parse_args()
-    if args.verbosity:
-        print "verbosity turned on"
+
 
     if args.f and args.i:
         print " -f e -i sono ad uso: UNO ESCLUDE L'ALTRO"
@@ -61,9 +63,12 @@ def main() :
     if args.f:
         selettore=1
         da_dove=args.f
-        if args.p and args.q != 'no':
-            print " con -f non sono ammessi altri -p / -q vari !"
+        if args.p  :
+            print " con -f non è ammesso -p !"
             exit (3)
+        if args.q != 'no':
+            print " con -f non è ammesso -q [opz] !"
+            exit (4)
 
     if args.i:
         selettore=2
@@ -77,13 +82,15 @@ def main() :
 
         if args.q != 'no':
            if args.q:
-                print "-q <",args.q,">"
+              #  print "-q <",args.q,">"
                 crea_risposta=1
                 devia_verso=args.q
            else:
-                crea_risposta=2
+             #  print "-q "
+               crea_risposta=2
         else:
-            crea_risposta=0
+            #print "non c'è la -q"
+            crea_risposta=2
 
 
     #print args
@@ -91,17 +98,18 @@ def main() :
     start_time = time.time()
 
 
+
     if selettore == 1 :
-        pc = dpkt.pcap.Reader( open ( da_dove ) )
+         pc = dpkt.pcap.Reader( open ( da_dove ) )
     elif selettore == 2 :
-        pc = pcap.pcap(name=da_dove)
-        print 'listening on %s: %s' % (pc.name, pc.filter)
+         pc = pcap.pcap(name=da_dove)
+         print 'listening on %s: %s' % (pc.name, pc.filter)
 
 
     with open('dns_whitelist.csv', 'rb') as csvfile:
-        reader=csv.reader(csvfile, delimiter=',', quotechar='|')
-        for i in reader:
-             dns_univ.append(i[0])
+         reader=csv.reader(csvfile, delimiter=',', quotechar='|')
+         for i in reader:
+              dns_univ.append(i[0])
 
     app=''
     for dns_selez in dns_univ:
