@@ -13,14 +13,11 @@ import csv
 
 
 port=53
-
 dns_univ=[]
-
 sottorete_univ='155.185.0.0/16'
 
 
 def main() :
-
 
     ######################
     selettore=None
