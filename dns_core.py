@@ -13,6 +13,7 @@ import sys
 import os
 import fcntl
 import time
+import dnslib
 
 
 
@@ -94,28 +95,7 @@ def loadRegExp():
                 regexp = i[0]
             else:
                 regexp = regexp + "|" + i[0]
-             #regexp.append(i[0])
-    print regexp
     regexp = re.compile(regexp)
-
-
-#def loadSitiMalevoli():
-#    global malevoli
-#    malevoli={}
-#    with open('name_malevoli.csv', 'rb') as csvfile:
-#		reader=csv.reader(csvfile, delimiter=',', quotechar='|')
-		#reader=str(reader)[0]
-#		for i in reader:
-
-#			if 3<len(i):
-
-#				i=i[3].replace("\"", "")
-#				#print i
-#				if not malevoli.has_key(i) and i != "-":
-#					#print i
-#					malevoli[i]=i
-
-
 
 def initialize_tables():
     global type_table
@@ -238,10 +218,6 @@ def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso,da
                 line=timestamp+", "+str(destinazione) +", "+str(sorgente)+", "+str(dns.qd[0].name)
                 sito= dns.qd[0].name
                 result = regexp.match(sito,re.IGNORECASE)
-                #for i in regexp:
-                #    result = re.match(i, sito,re.IGNORECASE)
-                #    if result == True:
-                #        break
 
                 if result == None :#and not malevoli.has_key(sito) :
                                 ##è una ricerca precisa di chiave... quindi non è ottima me funziona
@@ -249,11 +225,6 @@ def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso,da
                     ##qui loggo i siti leciti che NON fanno parte di unimore
                     scrivi(line,output_R_ok)
                 else:
-                    #if malevoli.has_key(sito) :
-                        ## se è un sito malevolo che è contenuto in quella lista
-                        #print "Sito ",sito, "è una minaccia"
-                    ##print " Risposta riguardo unimore",sito
-                    ## assegnamento ad occhio al posto che print... già il tutto è lento di suo...
                     asd=1
 
                 if src in dns_blacklist:
@@ -267,11 +238,6 @@ def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso,da
                 line=timestamp+", "+str(destinazione) +", "+str(sorgente)+", "+str(dns.qd[0].name)
                 sito= dns.qd[0].name
                 result = regexp.match(sito,re.IGNORECASE)
-                #for i in regexp:
-                #    result = re.match(i, sito,re.IGNORECASE)
-                #    if result == True:
-                #        break
-
                 if result == None :
                     ##anche qui,stampo solo i siti che risultano errati ma che NON sono universitari
                     scrivi(line,output_R_no)
@@ -285,15 +251,6 @@ def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso,da
     return
 
 
-##deprecata e integrata sopra
-#def controlla_dns(nameserver, client, sport, dport, data):
-#    "controlla se il dns e valido oppure no"
-#    if nameserver not in dns_whitelist:
-#        #timestamp,dst,src,namedomain,address
-#        print client,", ",nameserver,", "
-#    return
-
-
 def manda_risposta_fantoccio(devia_verso,dst,src,da_porta):
     ##ricordo che la src e la dst qui sono invertite rispetto a quando le ho prese
     #sono già invertite e pronte da utilizzare
@@ -302,12 +259,13 @@ def manda_risposta_fantoccio(devia_verso,dst,src,da_porta):
     ##creo risposta fantoccio
    # mypacket = scapy.IP(dst=dst,src=src)/scapy.UDP(dport=da_porta)/scapy.DNS(qd=scapy.DNSQR(qname=devia_verso))
    # send(mypacket)
-
-
+    d=dnslib.DNSRecord(dnslib.DNSHeader(qr=1,aa=1,ra=1),q=dnslib.DNSQuestion("abc.com"),a=dnslib.RR("abc.com",rdata=dnslib.A("1.2.3.4")))
 
 def manda_risposta_NXD(dst,src,da_porta):
     ## qui ho già dst e src giusti da usare
     print "risposta NXD mandata"
+
+
     #mypacket = scapy.IP(dst=dst,src=src)/scapy.UDP(dport=da_porta)/scapy.DNS(qd=scapy.DNSQR(qname="nonesiste"))
     #send(mypacket)
 

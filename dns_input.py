@@ -7,12 +7,14 @@ import subprocess
 import dns_core
 import time
 import argparse
+import csv
 
 
 
 
 port=53
-dns_univ=['155.185.1.2','155.185.1.5']
+
+dns_univ=[]
 
 sottorete_univ='155.185.0.0/16'
 
@@ -39,12 +41,11 @@ def main() :
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", help="Da file")
     parser.add_argument("-i", help="Da input")
-    parser.add_argument("-p", help="Risposta finta da porta")
-    parser.add_argument("-q", help="Risoluzione finta",nargs='?',default='0')
+    parser.add_argument("-p", help="porta da cui inviare la risposta(default quella di -i)")
+    parser.add_argument("-q", help="Risoluzione finta", default='no',nargs='?')
     parser.add_argument("-out", help="Nome dei file output, default 'output_xxxxx'",default='output')
 
     ## se c'è p ma non c'è q dice NO SUCH DOMAIN
-    ## in ho  -p <port> -q ->  porta su kitten war
     ## se no -p <port> -q <ip_reindirizzamento> porta su quell'ip la risoluzione
 
     parser.add_argument("-v","--verbosity", help="increase output verbosity")
@@ -60,7 +61,7 @@ def main() :
     if args.f:
         selettore=1
         da_dove=args.f
-        if args.p or args.q!='0':
+        if args.p and args.q != 'no':
             print " con -f non sono ammessi altri -p / -q vari !"
             exit (3)
 
@@ -68,28 +69,24 @@ def main() :
         selettore=2
         da_dove=args.i
 
+        #porta di risposta
         if args.p:
-            crea_risposta=1
             da_porta=args.p
+        else:
+            da_porta=da_dove
 
-            if args.q=='0':
-                ## non c'è il -q
-                print "non c'è -q"
+        if args.q != 'no':
+           if args.q:
+                print "-q <",args.q,">"
+                crea_risposta=1
+                devia_verso=args.q
+           else:
                 crea_risposta=2
-            else:
-                if args.q:
-                    print "-q <",args.q,">"
-                    crea_risposta=1
-                    devia_verso=args.q
-                else:
-                    a=1
-                    print "-q <vuoto>"
-                    crea_risposta=1
-                    devia_verso='www.kittenwar.com'#'64.64.4.109'#kitten war
+        else:
+            crea_risposta=0
 
 
-
-    print args
+    #print args
 
     start_time = time.time()
 
@@ -101,14 +98,17 @@ def main() :
         print 'listening on %s: %s' % (pc.name, pc.filter)
 
 
-
+    with open('dns_whitelist.csv', 'rb') as csvfile:
+        reader=csv.reader(csvfile, delimiter=',', quotechar='|')
+        for i in reader:
+             dns_univ.append(i[0])
 
     app=''
     for dns_selez in dns_univ:
-        app=app+' not (src host '+ dns_selez + ' and not dst net '+ sottorete_univ+' ) and not (dst host '+ dns_selez + ' and not src net '+ sottorete_univ+' ) and '
+        app=app+' and not (src host '+ dns_selez + ' and not dst net '+ sottorete_univ+' ) and not (dst host '+ dns_selez + ' and not src net '+ sottorete_univ+' ) '
 
 
-    predicato_di_filtro='port '+ str(port)+' and '+app+' (net '+sottorete_univ+' )'
+    predicato_di_filtro='port '+ str(port)+app#+' (net '+sottorete_univ+' )'
     print predicato_di_filtro
     pc.setfilter(predicato_di_filtro)
     dns_core.reader(pc,args.out,crea_risposta,devia_verso,da_porta)
