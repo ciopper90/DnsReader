@@ -18,6 +18,8 @@ import time
 
 type_table = {}  # This is a lookup table for DNS query types
 dns_whitelist = []
+regexp = ''
+#regexp = []
 dns_blacklist= set()
 malevoli={}
 output_R_ok=""
@@ -81,6 +83,20 @@ def loadDns_white():
         reader=csv.reader(csvfile, delimiter=',', quotechar='|')
         for i in reader:
              dns_whitelist.append(i[0])
+
+def loadRegExp():
+    global regexp
+
+    with open('regexp.csv', 'rb') as csvfile:
+        reader=csv.reader(csvfile, delimiter=',', quotechar='|')
+        for i in reader:
+            if regexp == '':
+                regexp = i[0]
+            else:
+                regexp = regexp + "|" + i[0]
+             #regexp.append(i[0])
+    print regexp
+    regexp = re.compile(regexp)
 
 
 #def loadSitiMalevoli():
@@ -152,6 +168,12 @@ def reader(pc,nome_out,crea_risposta,devia_verso,da_porta):
     fcntl.fcntl(sys.stdin.fileno(), fcntl.F_SETFL, fl | os.O_NONBLOCK)
     print "Premi un pulsante per terminare , altrimenti aspetta"
 
+
+    if len(dns_whitelist) == 0 or len(malevoli)==0 or len(dns_blacklist)==0:
+        loadDns_white()
+        loadDns_black()
+        loadRegExp()
+
     for (src, sport, dst, dport, data,timestamp ) in general_iterator(pc) :
 
         processa(src,dst,sport,dport,data,timestamp,crea_risposta,devia_verso,da_porta)
@@ -170,9 +192,6 @@ def reader(pc,nome_out,crea_risposta,devia_verso,da_porta):
     print "Processati Pacchetti in numero: ",processati, " e pacchetti che danno errore  ",errati
 
 def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso,da_porta):
-    if len(dns_whitelist) == 0 or len(malevoli)==0 or len(dns_blacklist)==0:
-        loadDns_white()
-        loadDns_black()
 #        loadSitiMalevoli()
 
     try:
@@ -218,7 +237,11 @@ def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso,da
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR:
                 line=timestamp+", "+str(destinazione) +", "+str(sorgente)+", "+str(dns.qd[0].name)
                 sito= dns.qd[0].name
-                result = re.match("(.)*.?unimo(re)?.it$", sito,re.IGNORECASE)
+                result = regexp.match(sito,re.IGNORECASE)
+                #for i in regexp:
+                #    result = re.match(i, sito,re.IGNORECASE)
+                #    if result == True:
+                #        break
 
                 if result == None :#and not malevoli.has_key(sito) :
                                 ##è una ricerca precisa di chiave... quindi non è ottima me funziona
@@ -243,7 +266,11 @@ def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso,da
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NXDOMAIN:
                 line=timestamp+", "+str(destinazione) +", "+str(sorgente)+", "+str(dns.qd[0].name)
                 sito= dns.qd[0].name
-                result = re.match("(.)*.local$|(.)*.?unimo(re)?.it$", sito,re.IGNORECASE)
+                result = regexp.match(sito,re.IGNORECASE)
+                #for i in regexp:
+                #    result = re.match(i, sito,re.IGNORECASE)
+                #    if result == True:
+                #        break
 
                 if result == None :
                     ##anche qui,stampo solo i siti che risultano errati ma che NON sono universitari
