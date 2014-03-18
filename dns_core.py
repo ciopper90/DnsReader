@@ -8,7 +8,7 @@ import subprocess
 import csv
 import re
 from datetime import datetime
-#from scapy.all import *
+from scapy.all import *
 import sys
 import os
 import fcntl
@@ -26,6 +26,7 @@ malevoli={}
 output_R_ok=""
 output_R_no=""
 output_Q=""
+devia_verso=''
 
 #inizio inizializzazioni
 def open_file(nome_out):
@@ -131,9 +132,10 @@ def general_iterator(pc):
 
 
 
-def reader(pc,nome_out,crea_risposta,devia_verso,da_porta):
+def reader(pc,nome_out,crea_risposta,devia,da_porta):
     open_file(nome_out)
-
+    deia_verso=devia
+    interface_output=da_porta
     if crea_risposta==0:
         print "Non creo risposte, solo logging"
     elif crea_risposta==1:
@@ -156,7 +158,7 @@ def reader(pc,nome_out,crea_risposta,devia_verso,da_porta):
 
     for (src, sport, dst, dport, data,timestamp ) in general_iterator(pc) :
 
-        processa(src,dst,sport,dport,data,timestamp,crea_risposta,devia_verso,da_porta)
+        processa(src,dst,sport,dport,data,timestamp,crea_risposta)
         processati=processati+1
         try:
             stdin = sys.stdin.read()
@@ -171,7 +173,7 @@ def reader(pc,nome_out,crea_risposta,devia_verso,da_porta):
 
     print "Processati Pacchetti in numero: ",processati, " e pacchetti che danno errore  ",errati
 
-def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso,da_porta):
+def processa(src, dst, sport, dport, data,timestamp,crea_risposta):
 #        loadSitiMalevoli()
 
     try:
@@ -185,13 +187,7 @@ def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso,da
         if dns.qr == dpkt.dns.DNS_Q:#dport == 53 :
             # UDP/53 is a DNS query
             #richiesta
-            #client = sorgente
-            #nameserver = destinazione
-
             if destinazione not in dns_whitelist:
-                ##NB. il prof vuole SEMPRE lo stesso ordine
-                ## timestamp, client, nameserver, hostname(darisolvere)
-                #print "%s: %f " % ( "quiiiiiiiiiiiiiiiiiiiiii tempoooo", timestamp)
                 line=timestamp+", "+str(sorgente) +", "+str(destinazione)+", "+dns.qd[0].name
                 scrivi(line,output_Q)
             if dst in dns_blacklist:
@@ -199,28 +195,23 @@ def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso,da
                 ##lascio in binario in quanto faccio la comparazione in binario è ultrarapida
 
                 if crea_risposta==1:
-                    manda_risposta_fantoccio(devia_verso,sorgente,destinazione,da_porta)
+                    manda_risposta_fantoccio(dns,sorgente,destinazione,sport,dport)
                 if crea_risposta==2:
-                    manda_risposta_NXD(src,dst,da_porta)
+                    manda_risposta_NXD(dns)
                 ##ricordo che la src sarà il destinatario e la dst sarà la sorgente
 
                 line=timestamp+", "+str(sorgente) +", "+str(destinazione)+", DomandaADnsNonLecito"
                 scrivi(line,output_ALARM)
 
-        if dns.qr == dpkt.dns.DNS_R:#sport == 53:
+        if dns.qr == dpkt.dns.DNS_R:
             # UDP/53 is a DNS response
-            #nameserver = sorgente
-            #client = destinazione
-            ##NB. il prof vuole SEMPRE lo stesso ordine
-            ## timestamp, client, nameserver, hostname(risolto)
-
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR:
                 line=timestamp+", "+str(destinazione) +", "+str(sorgente)+", "+str(dns.qd[0].name)
                 sito= dns.qd[0].name
                 result = regexp.match(sito,re.IGNORECASE)
 
                 if result == None :#and not malevoli.has_key(sito) :
-                                ##è una ricerca precisa di chiave... quindi non è ottima me funziona
+                    ##è una ricerca precisa di chiave... quindi non è ottima me funziona
                     #print sito
                     ##qui loggo i siti leciti che NON fanno parte di unimore
                     scrivi(line,output_R_ok)
@@ -243,25 +234,23 @@ def processa(src, dst, sport, dport, data,timestamp,crea_risposta,devia_verso,da
                     scrivi(line,output_R_no)
 
     except Exception:
-        #print "Errore Data"
-        ##la stampa rallenta un casino... meglio assegnamento
         global errati
         errati=errati+1
 
     return
 
 
-def manda_risposta_fantoccio(devia_verso,dst,src,da_porta):
-    ##ricordo che la src e la dst qui sono invertite rispetto a quando le ho prese
-    #sono già invertite e pronte da utilizzare
+def manda_risposta_fantoccio(dns,src,dst,sport,dport):
+    #devo leggere tutti i dati dal pacchetto dns passato alla funzione
+    mypacket = scapy.all.IP(dst=src,src=dst)/\
+               scapy.all.UDP(dport=sport, sport=dport.dport)/\
+               scapy.all.DNS(id=dns.id, qd=dns.qd,aa = 1, qr=1, \
+               an=scapy.all.DNSRR(rrname=dns.qd.qname,  ttl=10, rdata=devia_verso))
+    scapy.all.send(mypacket)
+    print "risposta falsa"
 
-    print "risposta fantoccio inviata"
-    ##creo risposta fantoccio
-   # mypacket = scapy.IP(dst=dst,src=src)/scapy.UDP(dport=da_porta)/scapy.DNS(qd=scapy.DNSQR(qname=devia_verso))
-   # send(mypacket)
-    d=dnslib.DNSRecord(dnslib.DNSHeader(qr=1,aa=1,ra=1),q=dnslib.DNSQuestion("abc.com"),a=dnslib.RR("abc.com",rdata=dnslib.A("1.2.3.4")))
 
-def manda_risposta_NXD(dst,src,da_porta):
+def manda_risposta_NXD(dns):
     ## qui ho già dst e src giusti da usare
     print "risposta NXD mandata"
 
