@@ -117,7 +117,7 @@ def main() :
 
 
     predicato_di_filtro='port '+ str(port)+app#+' (net '+sottorete_univ+' )'
-    print predicato_di_filtro
+    #print predicato_di_filtro
     pc.setfilter(predicato_di_filtro)
     dns_core.reader(pc,args.out,crea_risposta,devia_verso,da_porta)
     ##crea_risposta == 0 non crea niente
