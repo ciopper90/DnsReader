@@ -70,7 +70,7 @@ def main() :
 
         if args.p:
             crea_risposta=1
-            da_porta=args.i
+            da_porta=args.p
 
             if args.q=='0':
                 ## non c'è il -q
