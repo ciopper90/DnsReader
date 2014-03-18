@@ -36,7 +36,7 @@ def main() :
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", help="Da file")
     parser.add_argument("-i", help="Da input")
-    parser.add_argument("-p", help="porta da cui inviare la risposta(default quella di -i)")
+    parser.add_argument("-p", help="Interfaccia da cui inviare le risposte (default quella di -i)")
     parser.add_argument("-q", help="Risoluzione finta", default='no',nargs='?')
     parser.add_argument("-out", help="Nome dei file output, default 'output_xxxxx'",default='output')
 
@@ -57,6 +57,7 @@ def main() :
 
     if args.f:
         selettore=1
+        print "apre da file"
         da_dove=args.f
         if args.p  :
             print " con -f non è ammesso -p !"
@@ -68,23 +69,26 @@ def main() :
     if args.i:
         selettore=2
         da_dove=args.i
+        #print " apre da interfaccia"
 
         #porta di risposta ( interfaccia)
         if args.p:
             da_porta=args.p
+            #print " vuole inviare risposte false"
         else:
             da_porta=da_dove
+            #print " NON vuole inviare risposte false"
 
         if args.q != 'no':
            if args.q:
-              #  print "-q <",args.q,">"  #devio verso
+                #print "-q <",args.q,">"  #devio verso
                 crea_risposta=1
                 devia_verso=args.q
            else:
-             #  print "-q " # rispondo no such domain
+              # print "-q , rispondo con nxd" # rispondo no such domain
                crea_risposta=2
         else:
-            #print "non c'è la -q " # ma sempre no such domain rispondo!
+            #print "non c'è la -q , rispondo nxd" # ma sempre no such domain rispondo!
             crea_risposta=2
 
 
@@ -95,20 +99,20 @@ def main() :
 
 
     if selettore == 1 :
-         pc = dpkt.pcap.Reader( open ( da_dove ) )
+          pc = dpkt.pcap.Reader( open ( da_dove ) )
     elif selettore == 2 :
-         pc = pcap.pcap(name=da_dove)
-         print 'listening on %s: %s' % (pc.name, pc.filter)
+          pc = pcap.pcap(name=da_dove)
+          print 'listening on %s: %s' % (pc.name, pc.filter)
 
 
     with open('dns_whitelist.csv', 'rb') as csvfile:
-         reader=csv.reader(csvfile, delimiter=',', quotechar='|')
-         for i in reader:
-              dns_univ.append(i[0])
+          reader=csv.reader(csvfile, delimiter=',', quotechar='|')
+          for i in reader:
+               dns_univ.append(i[0])
 
     app=''
     for dns_selez in dns_univ:
-        app=app+' and not (src host '+ dns_selez + ' and not dst net '+ sottorete_univ+' ) and not (dst host '+ dns_selez + ' and not src net '+ sottorete_univ+' ) '
+         app=app+' and not (src host '+ dns_selez + ' and not dst net '+ sottorete_univ+' ) and not (dst host '+ dns_selez + ' and not src net '+ sottorete_univ+' ) '
 
 
     predicato_di_filtro='port '+ str(port)+app#+' (net '+sottorete_univ+' )'
