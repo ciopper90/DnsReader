@@ -22,8 +22,6 @@ sottorete_univ='155.185.0.0/16'
 def main() :
 
 
-
-
     ######################
     selettore=None
     devia_verso=None
@@ -31,9 +29,6 @@ def main() :
     #crea_risposta=1 #crea risposta
     #crea_risposta=2 #risponde con no such domain
     da_porta=None
-
-
-
 
     ##########################
 
@@ -82,14 +77,14 @@ def main() :
 
         if args.q != 'no':
            if args.q:
-              #  print "-q <",args.q,">"
+              #  print "-q <",args.q,">"  #devio verso
                 crea_risposta=1
                 devia_verso=args.q
            else:
-             #  print "-q "
+             #  print "-q " # rispondo no such domain
                crea_risposta=2
         else:
-            #print "non c'è la -q"
+            #print "non c'è la -q " # ma sempre no such domain rispondo!
             crea_risposta=2
 
 
