@@ -74,10 +74,8 @@ def main() :
         #porta di risposta ( interfaccia)
         if args.p:
             da_porta=args.p
-            #print " vuole inviare risposte false"
         else:
             da_porta=da_dove
-            #print " NON vuole inviare risposte false"
 
         if args.q != 'no':
            if args.q:
@@ -88,8 +86,12 @@ def main() :
               # print "-q , rispondo con nxd" # rispondo no such domain
                crea_risposta=2
         else:
-            #print "non c'è la -q , rispondo nxd" # ma sempre no such domain rispondo!
-            crea_risposta=2
+            if args.p ==None:
+			    crea_risposta=0
+			    #print " NON vuole inviare risposte false"
+            else:
+			    #print "non c'è la -q , rispondo nxd" # ma sempre no such domain rispondo!
+            	crea_risposta=2
 
 
     #print args
