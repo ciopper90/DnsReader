@@ -27,6 +27,7 @@ output_R_ok=""
 output_R_no=""
 output_Q=""
 devia_verso=''
+crea_risposta=''
 
 #inizio inizializzazioni
 def open_file(nome_out):
@@ -132,7 +133,7 @@ def general_iterator(pc):
 
 
 
-def reader(pc,nome_out,crea_risposta,devia,da_porta):
+def reader(pc,nome_out,crea_risp,devia,da_porta):
     open_file(nome_out)
     deia_verso=devia
     interface_output=da_porta
@@ -146,6 +147,8 @@ def reader(pc,nome_out,crea_risposta,devia,da_porta):
     processati=0;
     global errati
     errati=0
+    global crea_risposta
+    crea_risposta=crea_risp
     fl = fcntl.fcntl(sys.stdin.fileno(), fcntl.F_GETFL)
     fcntl.fcntl(sys.stdin.fileno(), fcntl.F_SETFL, fl | os.O_NONBLOCK)
     print "Premi un pulsante per terminare , altrimenti aspetta"
@@ -158,7 +161,7 @@ def reader(pc,nome_out,crea_risposta,devia,da_porta):
 
     for (src, sport, dst, dport, data,timestamp ) in general_iterator(pc) :
 
-        processa(src,dst,sport,dport,data,timestamp,crea_risposta)
+        processa(src,dst,sport,dport,data,timestamp)
         processati=processati+1
         try:
             stdin = sys.stdin.read()
@@ -173,7 +176,7 @@ def reader(pc,nome_out,crea_risposta,devia,da_porta):
 
     print "Processati Pacchetti in numero: ",processati, " e pacchetti che danno errore  ",errati
 
-def processa(src, dst, sport, dport, data,timestamp,crea_risposta):
+def processa(src, dst, sport, dport, data,timestamp):
 #        loadSitiMalevoli()
 
     try:
