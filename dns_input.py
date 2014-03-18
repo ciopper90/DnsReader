@@ -69,7 +69,7 @@ def main() :
         selettore=2
         da_dove=args.i
 
-        #porta di risposta
+        #porta di risposta ( interfaccia)
         if args.p:
             da_porta=args.p
         else:
