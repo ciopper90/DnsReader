@@ -28,6 +28,7 @@ output_R_no=""
 output_Q=""
 devia_verso=''
 crea_risposta=''
+da_porta=''
 
 #inizio inizializzazioni
 def open_file(nome_out):
@@ -133,15 +134,16 @@ def general_iterator(pc):
 
 
 
-def reader(pc,nome_out,crea_risp,devia,da_porta):
+def reader(pc,nome_out,crea_risp,devia,porta):
     open_file(nome_out)
-    deia_verso=devia
+    global devia_verso
+    devia_verso=devia
     interface_output=da_porta
-    if crea_risposta==0:
+    if crea_risp==0:
         print "Non creo risposte, solo logging"
-    elif crea_risposta==1:
+    elif crea_risp==1:
          print "Creo risposte, rimando verso: ",devia_verso
-    elif crea_risposta==2:
+    elif crea_risp==2:
          print "Rispondo No Such Domain"
 
     processati=0;
@@ -149,6 +151,8 @@ def reader(pc,nome_out,crea_risp,devia,da_porta):
     errati=0
     global crea_risposta
     crea_risposta=crea_risp
+    global da_porta
+    da_porta=porta
     fl = fcntl.fcntl(sys.stdin.fileno(), fcntl.F_GETFL)
     fcntl.fcntl(sys.stdin.fileno(), fcntl.F_SETFL, fl | os.O_NONBLOCK)
     print "Premi un pulsante per terminare , altrimenti aspetta"
@@ -160,7 +164,6 @@ def reader(pc,nome_out,crea_risp,devia,da_porta):
         loadRegExp()
 
     for (src, sport, dst, dport, data,timestamp ) in general_iterator(pc) :
-
         processa(src,dst,sport,dport,data,timestamp)
         processati=processati+1
         try:
@@ -171,7 +174,7 @@ def reader(pc,nome_out,crea_risp,devia,da_porta):
         except IOError:
             pass
 
-
+    processati=0
     close_file()
 
     print "Processati Pacchetti in numero: ",processati, " e pacchetti che danno errore  ",errati
@@ -236,7 +239,7 @@ def processa(src, dst, sport, dport, data,timestamp):
                     ##anche qui,stampo solo i siti che risultano errati ma che NON sono universitari
                     scrivi(line,output_R_no)
 
-    except Exception:
+    except ValueError:
         global errati
         errati=errati+1
 
@@ -245,11 +248,12 @@ def processa(src, dst, sport, dport, data,timestamp):
 
 def manda_risposta_fantoccio(dns,src,dst,sport,dport):
     #devo leggere tutti i dati dal pacchetto dns passato alla funzione
+    print "src="+str(src)+ ", dst=" +str(dst)+ ", sport="+str(sport)+", dport="+str(dport)+ ", name="+dns.qd[0].name+", verso="+devia_verso
     mypacket = scapy.all.IP(dst=src,src=dst)/\
-               scapy.all.UDP(dport=sport, sport=dport.dport)/\
-               scapy.all.DNS(id=dns.id, qd=dns.qd,aa = 1, qr=1, \
-               an=scapy.all.DNSRR(rrname=dns.qd.qname,  ttl=10, rdata=devia_verso))
-    scapy.all.send(mypacket)
+               scapy.all.UDP(dport=sport, sport=dport)/\
+               scapy.all.DNS(id=dns.id, aa = 1, qr=1, \
+               an=scapy.all.DNSRR(rrname=dns.qd[0].name,  ttl=10, rdata=devia_verso))
+    scapy.all.send(mypacket,iface=da_porta)
     print "risposta falsa"
 
 
