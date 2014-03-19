@@ -13,7 +13,7 @@ import sys
 import os
 import fcntl
 import time
-import dnslib
+#import dnslib
 
 
 
@@ -155,7 +155,7 @@ def reader(pc,nome_out,crea_risp,devia,porta):
     da_porta=porta
     fl = fcntl.fcntl(sys.stdin.fileno(), fcntl.F_GETFL)
     fcntl.fcntl(sys.stdin.fileno(), fcntl.F_SETFL, fl | os.O_NONBLOCK)
-    print "Premi un pulsante per terminare , altrimenti aspetta"
+    print "Premi un INVIO per terminare , altrimenti aspetta"
 
 
     if len(dns_whitelist) == 0 or len(malevoli)==0 or len(dns_blacklist)==0:
@@ -174,7 +174,8 @@ def reader(pc,nome_out,crea_risp,devia,porta):
         except IOError:
             pass
 
-    processati=0
+    #processati=0
+    ## perchè avevi messo processati=0 ?
     close_file()
 
     print "Processati Pacchetti in numero: ",processati, " e pacchetti che danno errore  ",errati
