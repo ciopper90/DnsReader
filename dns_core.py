@@ -239,7 +239,7 @@ def processa(src, dst, sport, dport, data,timestamp):
                     ##anche qui,stampo solo i siti che risultano errati ma che NON sono universitari
                     scrivi(line,output_R_no)
 
-    except ValueError:
+    except Exception:
         global errati
         errati=errati+1
 
