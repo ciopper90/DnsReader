@@ -203,7 +203,7 @@ def processa(src, dst, sport, dport, data,timestamp):
                 if crea_risposta==1:
                     manda_risposta_fantoccio(dns,sorgente,destinazione,sport,dport)
                 if crea_risposta==2:
-                    manda_risposta_NXD(dns)
+                    manda_risposta_NXD(dns,sorgente,destinazione,sport,dport)
                 ##ricordo che la src sarà il destinatario e la dst sarà la sorgente
 
                 line=timestamp+", "+str(sorgente) +", "+str(destinazione)+", DomandaADnsNonLecito"
@@ -248,18 +248,27 @@ def processa(src, dst, sport, dport, data,timestamp):
 
 def manda_risposta_fantoccio(dns,src,dst,sport,dport):
     #devo leggere tutti i dati dal pacchetto dns passato alla funzione
-    print "src="+str(src)+ ", dst=" +str(dst)+ ", sport="+str(sport)+", dport="+str(dport)+ ", name="+dns.qd[0].name+", verso="+devia_verso
+    #print "src="+str(src)+ ", dst=" +str(dst)+ ", sport="+str(sport)+", dport="+str(dport)+ ", name="+dns.qd[0].name+", verso="+devia_verso
     mypacket = scapy.all.IP(dst=src,src=dst)/\
                scapy.all.UDP(dport=sport, sport=dport)/\
                scapy.all.DNS(id=dns.id, aa = 1, qr=1, \
                an=scapy.all.DNSRR(rrname=dns.qd[0].name,  ttl=10, rdata=devia_verso))
     scapy.all.send(mypacket,iface=da_porta)
-    print "risposta falsa"
+    #print "risposta falsa"
 
 
-def manda_risposta_NXD(dns):
+def manda_risposta_NXD(dns,src,dst,sport,dport):
     ## qui ho già dst e src giusti da usare
-    print "risposta NXD mandata"
+    #print "src="+str(src)+ ", dst=" +str(dst)+ ", sport="+str(sport)+", dport="+str(dport)+ ", name="+dns.qd[0].name+", verso="+devia_verso
+    mypacket = scapy.all.IP(dst=src,src=dst)/\
+               scapy.all.UDP(dport=sport, sport=dport)/\
+               scapy.all.DNS(id=dns.id, aa = 1, qr=1, rcode=3)
+    scapy.all.send(mypacket,iface=da_porta)
+
+
+
+
+    #print "risposta NXD mandata"
 
 
     #mypacket = scapy.IP(dst=dst,src=src)/scapy.UDP(dport=da_porta)/scapy.DNS(qd=scapy.DNSQR(qname="nonesiste"))
