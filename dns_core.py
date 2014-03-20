@@ -265,13 +265,4 @@ def manda_risposta_NXD(dns,src,dst,sport,dport):
                scapy.all.UDP(dport=sport, sport=dport)/\
                scapy.all.DNS(id=dns.id, aa = 1, qr=1, rcode=3)
     scapy.all.send(mypacket,iface=da_porta)
-
-
-
-
     #print "risposta NXD mandata"
-
-
-    #mypacket = scapy.IP(dst=dst,src=src)/scapy.UDP(dport=da_porta)/scapy.DNS(qd=scapy.DNSQR(qname="nonesiste"))
-    #send(mypacket)
-
