@@ -138,7 +138,6 @@ def reader(pc,nome_out,crea_risp,devia,porta):
     open_file(nome_out)
     global devia_verso
     devia_verso=devia
-    interface_output=da_porta
     if crea_risp==0:
         print "Non creo risposte, solo logging"
     elif crea_risp==1:
@@ -260,7 +259,7 @@ def manda_risposta_fantoccio(dns,src,dst,sport,dport):
 
 def manda_risposta_NXD(dns,src,dst,sport,dport):
     ## qui ho già dst e src giusti da usare
-    #print "src="+str(src)+ ", dst=" +str(dst)+ ", sport="+str(sport)+", dport="+str(dport)+ ", name="+dns.qd[0].name+", verso="+devia_verso
+    #print "src="+str(src)+ ", dst=" +str(dst)+ ", sport="+str(sport)+", dport="+str(dport)+ ", name="+dns.qd[0].name+", verso="+devia_verso +", "+da_porta
     mypacket = scapy.all.IP(dst=src,src=dst)/\
                scapy.all.UDP(dport=sport, sport=dport)/\
                scapy.all.DNS(id=dns.id, aa = 1, qr=1, rcode=3)
