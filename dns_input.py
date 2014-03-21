@@ -114,7 +114,7 @@ def main() :
          app=app+' and not (src host '+ dns_selez + ' and not dst net '+ sottorete_univ+' ) and not (dst host '+ dns_selez + ' and not src net '+ sottorete_univ+' ) '
 
 
-    predicato_di_filtro='port '+ str(port)+app#+' (net '+sottorete_univ+' )'
+    predicato_di_filtro='port '+ str(port)+app#+' and (net '+sottorete_univ+' )'
     #print predicato_di_filtro
     pc.setfilter(predicato_di_filtro)
     dns_core.reader(pc,args.out,crea_risposta,devia_verso,da_porta)

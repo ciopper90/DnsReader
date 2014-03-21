@@ -116,20 +116,27 @@ def initialize_tables():
 
 def general_iterator(pc):
     """pc is a pcap.pcap object that listens to the network and returns a packet object when it hears a packet go by"""
-    for ts, pkt in pc:
-        # parse the packet. Decode the ethertype. If it is IP (IPv4) then process it further
-        eth = dpkt.ethernet.Ethernet(pkt)
-        if eth.type == dpkt.ethernet.ETH_TYPE_IP :
-            ip = eth.data
-            # If the IP protocol is UDP, then process it further
-            if ip.p == dpkt.ip.IP_PROTO_UDP :
-                udp = ip.data
-                # Pass the IP addresses, source port, destination port, and data back to the caller.
-                yield ( ip.src, udp.sport, ip.dst, udp.dport, udp.data, ts)
-            elif ip.p ==dpkt.ip.IP_PROTO_TCP:
-                tcp=ip.data
-                #print "tcp",socket.inet_ntoa(ip.src), tcp.sport, socket.inet_ntoa(ip.dst), tcp.dport, tcp.data, ts
-                yield ( ip.src, tcp.sport, ip.dst, tcp.dport, tcp.data, ts)
+    fl = fcntl.fcntl(sys.stdin.fileno(), fcntl.F_GETFL)
+    fcntl.fcntl(sys.stdin.fileno(), fcntl.F_SETFL, fl | os.O_NONBLOCK)
+    try:
+
+        for ts, pkt in pc:   ##il fatto che l'uscita non sia responsive con il RETURN è dovuto al fatto che qui è in attesa di qualcosa!!
+            # parse the packet. Decode the ethertype. If it is IP (IPv4) then process it further
+
+            eth = dpkt.ethernet.Ethernet(pkt)
+            if eth.type == dpkt.ethernet.ETH_TYPE_IP :
+                ip = eth.data
+                # If the IP protocol is UDP, then process it further
+                if ip.p == dpkt.ip.IP_PROTO_UDP :
+                        udp = ip.data
+                        # Pass the IP addresses, source port, destination port, and data back to the caller.
+                        yield ( ip.src, udp.sport, ip.dst, udp.dport, udp.data, ts)
+                elif ip.p ==dpkt.ip.IP_PROTO_TCP:
+                        tcp=ip.data
+                        #print "tcp",socket.inet_ntoa(ip.src), tcp.sport, socket.inet_ntoa(ip.dst), tcp.dport, tcp.data, ts
+                        yield ( ip.src, tcp.sport, ip.dst, tcp.dport, tcp.data, ts)
+    except KeyboardInterrupt:
+        print " Esco"
 
 
 
@@ -154,7 +161,7 @@ def reader(pc,nome_out,crea_risp,devia,porta):
     da_porta=porta
     fl = fcntl.fcntl(sys.stdin.fileno(), fcntl.F_GETFL)
     fcntl.fcntl(sys.stdin.fileno(), fcntl.F_SETFL, fl | os.O_NONBLOCK)
-    print "Premi un INVIO per terminare , altrimenti aspetta"
+    print "Premi un INVIO o CTRL+C per terminare , altrimenti aspetta"
 
 
     if len(dns_whitelist) == 0 or len(malevoli)==0 or len(dns_blacklist)==0:
@@ -162,19 +169,23 @@ def reader(pc,nome_out,crea_risp,devia,porta):
         loadDns_black()
         loadRegExp()
 
-    for (src, sport, dst, dport, data,timestamp ) in general_iterator(pc) :
-        processa(src,dst,sport,dport,data,timestamp)
-        processati=processati+1
+    for (src, sport, dst, dport, data,timestamp ) in general_iterator(pc) : ##il fatto che l'uscita non sia responsive con il RETURN è dovuto al fatto che qui è in attesa di qualcosa!!
         try:
-            stdin = sys.stdin.read()
-            if "\n" in stdin or "\r" in stdin:
-                print "terminato prima della Conclusione naturale"
-                break
-        except IOError:
-            pass
+
+            processa(src,dst,sport,dport,data,timestamp)
+            processati=processati+1
+            try:
+                stdin = sys.stdin.read()
+                if "\n" in stdin or "\r" in stdin:
+                    print "terminato prima della Conclusione naturale"
+                    break
+            except IOError:
+                pass
+        except KeyboardInterrupt:
+            break
 
     #processati=0
-    ## perchè avevi messo processati=0 ?
+
     close_file()
 
     print "Processati Pacchetti in numero: ",processati, " e pacchetti che danno errore  ",errati
@@ -239,7 +250,7 @@ def processa(src, dst, sport, dport, data,timestamp):
                     ##anche qui,stampo solo i siti che risultano errati ma che NON sono universitari
                     scrivi(line,output_R_no)
 
-    except Exception:
+    except Exception or KeyboardInterrupt:
         global errati
         errati=errati+1
 
@@ -263,5 +274,10 @@ def manda_risposta_NXD(dns,src,dst,sport,dport):
     mypacket = scapy.all.IP(dst=src,src=dst)/\
                scapy.all.UDP(dport=sport, sport=dport)/\
                scapy.all.DNS(id=dns.id, aa = 1, qr=1, rcode=3)
+    mypacket.qdcount=dns.qdcount
+    mypacket.ancount = 1
+    mypacket.rcode = 0
+    #rp.ancount = 0
+    #rp.rcode = 2
     scapy.all.send(mypacket,iface=da_porta)
     #print "risposta NXD mandata"
