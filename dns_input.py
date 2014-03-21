@@ -111,7 +111,10 @@ def main() :
 
     app=''
     for dns_selez in dns_univ:
-         app=app+' and not (src host '+ dns_selez + ' and not dst net '+ sottorete_univ+' ) and not (dst host '+ dns_selez + ' and not src net '+ sottorete_univ+' ) '
+        app=app+' and not (src host '+ dns_selez + ' and not dst net '+ sottorete_univ+' ) and not (dst host '+ dns_selez + ' and not src net '+ sottorete_univ+' ) '
+
+        ## variante... prova e non definitiva
+        #app=app+' or ( (src host '+ dns_selez + ' and dst net '+ sottorete_univ+' ) or (dst host '+ dns_selez + ' and src net '+ sottorete_univ+' )) '
 
 
     predicato_di_filtro='port '+ str(port)+app#+' and (net '+sottorete_univ+' )'
