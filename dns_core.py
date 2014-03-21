@@ -13,7 +13,6 @@ import sys
 import os
 import fcntl
 import time
-#import dnslib
 
 
 
@@ -33,13 +32,13 @@ da_porta=''
 #inizio inizializzazioni
 def open_file(nome_out):
     global output_R_ok
-    output_R_ok = open(nome_out+"_R_ok","w")
+    output_R_ok = open(nome_out+"_R_ok.csv","w")
     global output_R_no
-    output_R_no = open(nome_out+"_R_no","w")
+    output_R_no = open(nome_out+"_R_no.csv","w")
     global output_Q
-    output_Q = open(nome_out+"_Q","w")
+    output_Q = open(nome_out+"_Q.csv","w")
     global output_ALARM
-    output_ALARM = open(nome_out+"_ALARM","w")
+    output_ALARM = open(nome_out+"_ALARM.csv","w")
 
     if output_R_ok!=None and output_R_no!=None and output_Q!=None and output_ALARM!=None:
 
@@ -229,7 +228,6 @@ def processa(src, dst, sport, dport, data,timestamp):
 
                 if result == None :#and not malevoli.has_key(sito) :
                     ##è una ricerca precisa di chiave... quindi non è ottima me funziona
-                    #print sito
                     ##qui loggo i siti leciti che NON fanno parte di unimore
                     scrivi(line,output_R_ok)
                 else:
@@ -259,7 +257,6 @@ def processa(src, dst, sport, dport, data,timestamp):
 
 def manda_risposta_fantoccio(dns,src,dst,sport,dport):
     #devo leggere tutti i dati dal pacchetto dns passato alla funzione
-    #print "src="+str(src)+ ", dst=" +str(dst)+ ", sport="+str(sport)+", dport="+str(dport)+ ", name="+dns.qd[0].name+", verso="+devia_verso
     mypacket = scapy.all.IP(dst=src,src=dst)/\
                scapy.all.UDP(dport=sport, sport=dport)/\
                scapy.all.DNS(id=dns.id, aa = 1, qr=1, \
@@ -270,19 +267,8 @@ def manda_risposta_fantoccio(dns,src,dst,sport,dport):
 
 def manda_risposta_NXD(dns,src,dst,sport,dport):
     ## qui ho già dst e src giusti da usare
-    #print "src="+str(src)+ ", dst=" +str(dst)+ ", sport="+str(sport)+", dport="+str(dport)+ ", name="+dns.qd[0].name+", verso="+devia_verso +", "+da_porta
     mypacket = scapy.all.IP(dst=src,src=dst)/\
                scapy.all.UDP(dport=sport, sport=dport)/\
                scapy.all.DNS(id=dns.id, aa = 1, qr=1, rcode=3)
-
-    #prove
-    #########################################
-    #mypacket.qdcount=dns.qdcount
-    #mypacket.ancount = 1
-    #mypacket.rcode = 0
-    #######################
-    #rp.ancount = 0
-    #rp.rcode = 2
-    ########################################
     scapy.all.send(mypacket,iface=da_porta)
     #print "risposta NXD mandata"
