@@ -85,7 +85,7 @@ def loadDns_white():
     with open('dns_permessi.csv', 'rb') as csvfile:
         reader=csv.reader(csvfile, delimiter=',', quotechar='|')
         for i in reader:
-             dns_whitelist.append(i[0])
+             dns_whitelist.append(socket.inet_aton(i[0]))
 
 def loadRegExp():
     global regexp
@@ -138,12 +138,11 @@ def general_iterator(pc):
         print " Esco"
 
 
-
-
 def reader(pc,nome_out,crea_risp,devia,porta):
     open_file(nome_out)
     global devia_verso
     devia_verso=devia
+    print devia_verso
     if crea_risp==0:
         print "Non creo risposte, solo logging"
     elif crea_risp==1:
@@ -158,10 +157,7 @@ def reader(pc,nome_out,crea_risp,devia,porta):
     crea_risposta=crea_risp
     global da_porta
     da_porta=porta
-    fl = fcntl.fcntl(sys.stdin.fileno(), fcntl.F_GETFL)
-    fcntl.fcntl(sys.stdin.fileno(), fcntl.F_SETFL, fl | os.O_NONBLOCK)
     print "Premi un INVIO o CTRL+C per terminare , altrimenti aspetta"
-
 
     if len(dns_whitelist) == 0 or len(malevoli)==0 or len(dns_blacklist)==0:
         loadDns_white()
@@ -170,7 +166,6 @@ def reader(pc,nome_out,crea_risp,devia,porta):
 
     for (src, sport, dst, dport, data,timestamp ) in general_iterator(pc) : ##il fatto che l'uscita non sia responsive con il RETURN è dovuto al fatto che qui è in attesa di qualcosa!!
         try:
-
             processa(src,dst,sport,dport,data,timestamp)
             processati=processati+1
             try:
@@ -198,14 +193,15 @@ def processa(src, dst, sport, dport, data,timestamp):
         timestamp="{:.9f}".format(timestamp)
         timestamp = str(datetime.fromtimestamp( float(timestamp) ))
 
-        dns = dpkt.dns.DNS(data)
+        try:
+            dns = dpkt.dns.DNS(data)
+        except (IndexError, dpkt.dpkt.UnpackError) as x:
+            print x
+            return
 
         if dns.qr == dpkt.dns.DNS_Q:#dport == 53 :
             # UDP/53 is a DNS query
             #richiesta
-            if destinazione not in dns_whitelist:
-                line=timestamp+", "+str(sorgente) +", "+str(destinazione)+", "+dns.qd[0].name
-                scrivi(line,output_Q)
             if dst in dns_blacklist:
                 ## è un allarme!
                 ##lascio in binario in quanto faccio la comparazione in binario è ultrarapida
@@ -218,6 +214,10 @@ def processa(src, dst, sport, dport, data,timestamp):
 
                 line=timestamp+", "+str(sorgente) +", "+str(destinazione)+", DomandaADnsNonLecito"
                 scrivi(line,output_ALARM)
+
+            if dst not in dns_whitelist:
+                line=timestamp+", "+str(sorgente) +", "+str(destinazione)+", "+dns.qd[0].name
+                scrivi(line,output_Q)
 
         if dns.qr == dpkt.dns.DNS_R:
             # UDP/53 is a DNS response
@@ -248,7 +248,7 @@ def processa(src, dst, sport, dport, data,timestamp):
                     ##anche qui,stampo solo i siti che risultano errati ma che NON sono universitari
                     scrivi(line,output_R_no)
 
-    except Exception or KeyboardInterrupt:
+    except dpkt.dpkt.NeedData, KeyboardInterrupt:
         global errati
         errati=errati+1
 
@@ -257,12 +257,14 @@ def processa(src, dst, sport, dport, data,timestamp):
 
 def manda_risposta_fantoccio(dns,src,dst,sport,dport):
     #devo leggere tutti i dati dal pacchetto dns passato alla funzione
-    mypacket = scapy.all.IP(dst=src,src=dst)/\
-               scapy.all.UDP(dport=sport, sport=dport)/\
-               scapy.all.DNS(id=dns.id, aa = 1, qr=1, \
-               an=scapy.all.DNSRR(rrname=dns.qd[0].name,  ttl=10, rdata=devia_verso))
-    scapy.all.send(mypacket,iface=da_porta)
-    #print "risposta falsa"
+    try:
+        mypacket = scapy.all.IP(dst=src,src=dst)/\
+                   scapy.all.UDP(dport=sport, sport=dport)/\
+                   scapy.all.DNS(id=dns.id, qr=1, qdcount=1, qd=scapy.all.DNSQR(qtype='A', qname=dns.qd[0].name), \
+                   an=scapy.all.DNSRR(rrname=dns.qd[0].name,  ttl=300, rdata=devia_verso))
+        scapy.all.send(mypacket,iface=da_porta)
+    except Exception as x:
+        print x
 
 
 def manda_risposta_NXD(dns,src,dst,sport,dport):
@@ -270,5 +272,5 @@ def manda_risposta_NXD(dns,src,dst,sport,dport):
     mypacket = scapy.all.IP(dst=src,src=dst)/\
                scapy.all.UDP(dport=sport, sport=dport)/\
                scapy.all.DNS(id=dns.id, aa = 1, qr=1, rcode=3)
-    scapy.all.send(mypacket,iface=da_porta)
+    scapy.all.sendpfast(mypacket,iface=da_porta)
     #print "risposta NXD mandata"
