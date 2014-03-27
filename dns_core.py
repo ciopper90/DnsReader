@@ -224,6 +224,12 @@ def processa(src, dst, sport, dport, data,timestamp):
         if dns.qr == dpkt.dns.DNS_R:
             # UDP/53 is a DNS response
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NOERR:
+                if src in dns_blacklist:
+                    ## Ã¨ un allarme!
+                    ##lascio in binario in quanto faccio la comparazione in binario Ã¨ ultrarapida
+                    line=timestamp+", "+str(destinazione) +", "+str(sorgente)+", RispostaDaDnsNonLecito"
+                    scrivi(line,output_ALARM)
+
                 line=timestamp+", "+str(destinazione) +", "+str(sorgente)+", "+str(dns.qd[0].name)
                 sito= dns.qd[0].name
                 result = regexp.match(sito,re.IGNORECASE)
@@ -232,15 +238,6 @@ def processa(src, dst, sport, dport, data,timestamp):
                     ##Ã¨ una ricerca precisa di chiave... quindi non Ã¨ ottima me funziona
                     ##qui loggo i siti leciti che NON fanno parte di unimore
                     scrivi(line,output_R_ok)
-                else:
-                    asd=1
-
-                if src in dns_blacklist:
-                    ## Ã¨ un allarme!
-                    ##lascio in binario in quanto faccio la comparazione in binario Ã¨ ultrarapida
-                    line=timestamp+", "+str(destinazione) +", "+str(sorgente)+", RispostaDaDnsNonLecito"
-                    scrivi(line,output_ALARM)
-
                 return
             if dns.get_rcode() == dpkt.dns.DNS_RCODE_NXDOMAIN:
                 line=timestamp+", "+str(destinazione) +", "+str(sorgente)+", "+str(dns.qd[0].name)
