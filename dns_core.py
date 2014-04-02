@@ -49,7 +49,7 @@ def open_file(nome_out):
         scrivi(line,output_R_no)
         line="timestamp, Client, Nameserver, HostNameRichiestoDaRisolvere"
         scrivi(line,output_Q)
-        line="timestamp, Client, Nameserver, MotivoAllarme"
+        line="timestamp, Client, Nameserver, Hostname, MotivoAllarme"
         scrivi(line,output_ALARM)
 
         return True
@@ -214,7 +214,7 @@ def processa(src, dst, sport, dport, data,timestamp):
                     manda_risposta_NXD(dns,sorgente,destinazione,sport,dport)
                 ##ricordo che la src sarÃ  il destinatario e la dst sarÃ  la sorgente
 
-                line=timestamp+", "+str(sorgente) +", "+str(destinazione)+", DomandaADnsNonLecito"
+                line=timestamp+", "+str(sorgente) +", "+str(destinazione)+","+dns.qd[0].name+", DomandaADnsNonLecito"
                 scrivi(line,output_ALARM)
 
             if dst not in dns_whitelist:
@@ -227,7 +227,7 @@ def processa(src, dst, sport, dport, data,timestamp):
                 if src in dns_blacklist:
                     ## Ã¨ un allarme!
                     ##lascio in binario in quanto faccio la comparazione in binario Ã¨ ultrarapida
-                    line=timestamp+", "+str(destinazione) +", "+str(sorgente)+", RispostaDaDnsNonLecito"
+                    line=timestamp+", "+str(destinazione) +", "+str(sorgente)+","+dns.qd[0].name+", RispostaDaDnsNonLecito"
                     scrivi(line,output_ALARM)
 
                 line=timestamp+", "+str(destinazione) +", "+str(sorgente)+", "+str(dns.qd[0].name)
